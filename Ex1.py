@@ -11,17 +11,22 @@ lat_bounds = 43.5, 46.5
 long_bounds = -122.25,-124.7
 
 ax2 = plt.subplot(111)
-ax2.set_title("Roy's first map")
+ax2.set_title("Willamette Basin")
 
-m=basemap.Basemap(projection='cyl', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[0], 
+WBmap=basemap.Basemap(projection='cyl', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[0], 
             urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[1], ax=ax2)
 im = plt.imread('C:\\code\\maplot\\ElevationMap.png')
-m.imshow(im, origin='upper') #interpolation='lanczos', 
+WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
 #m.etopo()
 
-data_lats = [random.uniform(*lat_bounds) for i in xrange(4)]
-data_lons = [random.uniform(*long_bounds) for i in xrange(4)]
-print data_lons
-m.plot(data_lons,data_lats)
+#data_lats = [random.uniform(*lat_bounds) for i in xrange(4)]
+#data_lons = [random.uniform(*long_bounds) for i in xrange(4)]
+#m.plot(data_lons,data_lats)
 
+p_lon = -123.
+p_lat = 45.
+x,y = WBmap(p_lon,p_lat)
+WBmap.plot(x, y, 'bo', markersize=12)
+x1,y1=WBmap(p_lon-.5,p_lat+0.5)
+WBmap.plot(x1,y1,'bo', markersize=12)
 plt.show()
