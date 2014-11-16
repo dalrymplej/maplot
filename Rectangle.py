@@ -1,16 +1,17 @@
-#Created by Owen Haggerty on the 16th of November,2014
+#Created by Owen Haggerty on the 16th of November, 2014
 import numpy as np
 
 def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
-    '''
-This function takes a numpy array and coordinates in the array and outputs
-the rectangular set of data after handling it as specified by oper.
+    '''This function takes a numpy array and coordinates in the array and outputs
+    the rectangular set of data after handling it as specified by oper.
 
-array_2d: the numpy array
-bottom_left: the lower left coordinate of the desired rectangle
-top_right: the upper right coordinate of the desired rectangle
-oper: a string telling the function how to handle the rectangle
-after it is generated
+    array_2d: the numpy array
+    bottom_left: (list) the lower left coordinate of the desired rectangle
+    top_right: (list) the upper right coordinate of the desired rectangle
+    oper: (str) a string telling the function how to handle the rectangle
+        after it is generated
+    
+    returns a float
     '''
     max_x = top_right[0]
     min_x = bottom_left[0]
