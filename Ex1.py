@@ -31,6 +31,7 @@ import constants as cst
 import numpy as np
 import datetime
 import time as timetool, os.path
+from Rectangle import np_rec_calc as nrc
 
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
@@ -60,12 +61,26 @@ subbasin_data_area = [subbasin_data_coords[i][3] for i in range(len(subbasin_dat
 
 data1=[mfx(file,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
 data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
+data1_size=[nrc(data1[i],[1,260],[90,350]) for i in range(12)]
+for key in subbasin_data:
+    subbasin_data[key] = [subbasin_data[key],data1_size]
+print subbasin_data['North Santiam'][0][2]-1
+print subbasin_data_area[subbasin_data['North Santiam'][0][2]-1]
+assert False
+data1_size[subbasin_data['North Santiam'][0][2]-1] = subbasin_data['North Santiam'][1][0] - subbasin_data['South Santiam'][1][0]
+print data1_size
+import heapq
+data1_2nd_lgst = heapq.nlargest(2, data1_size)[1]  #find second-largest number
+data1_size = np.clip(100.*np.array(data1_size)/data1_2nd_lgst,0,100.)
+
+print data1_size
+#assert False
 colord = np.array(data1_spQ)
 
 x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
 cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
 
-WBmap.scatter(x, y, marker='o',  s=100, lw=0,c=colord,cmap = cmap1)
+WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
 
 # Metadata for bottom right corner
 #    metadata_bottomright = metadata_txt +  '\n' \
