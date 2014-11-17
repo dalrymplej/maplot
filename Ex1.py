@@ -13,8 +13,11 @@ import numpy as np
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
 
-ax2 = plt.subplot(111)
-ax2.set_title("Specific Discharge of Willamette & Tributaries")
+#ax2 = plt.subplot(111)
+ax2=plt.axes(frameon=False)
+ax2.set_title("Specific Discharge")
+#ax2.figure(frameon=False)
+#ax2.set_size_inches(w,h)
 
 WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
             urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
@@ -49,13 +52,11 @@ data1=[mfx('Discharge_(Subbasins)_Ref_Run0.csv',column=subbasin_data_order[i],sk
 data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
 colord = np.array(data1_spQ)
 
-p_lon = -123.0867
-p_lat = 44.0519
-x,y = WBmap(p_lon,p_lat)
 x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
 cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
 
 WBmap.scatter(x, y, marker='o',  s=100, lw=0,c=colord,cmap = cmap1)
+
 #plt.show()
 file_graphics = 'WB.png'
 plt.savefig(file_graphics, format="png", dpi=600)
