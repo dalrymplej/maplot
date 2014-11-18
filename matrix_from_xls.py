@@ -8,7 +8,9 @@ def matrix_from_xls(
     data_type='annual', 
     leap_yr='none', 
     read_date_column=False, 
-    date_column=0):
+    date_column=0,
+    movingaveragevec='none'
+    ):
     #Roy Haggerty, 2014
     """Reads timeseries sheet (csv, xls/xlsx, google). Returns 2-D numpy array.
     
@@ -33,6 +35,7 @@ def matrix_from_xls(
     import numpy as np
     import xlrd
     import pandas as pd
+    from movingaverage import movingaverage
     
     if read_date_column:
         data_col_num = column - 1
@@ -51,6 +54,8 @@ def matrix_from_xls(
                           day_of_year_start=day_of_year_start, xcycle=xcycle)
             data_yr_tmp = timeseries(ts,leap_yr=leap_yr,missing_data='bfill',
                         start_date = start_date)
+            if movingaveragevec != 'none':
+                data_yr_tmp = movingaverage(data_yr_tmp, movingaveragevec) 
             return start_year, end_year, data_2D(data_yr_tmp,skip,xcycle)
         else:
             data_tmp = np.array(np.genfromtxt(file_w_path, delimiter=',',skip_header=1)) # Read csv file
