@@ -26,29 +26,20 @@ def get_data():
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from mpl_toolkits import basemap
-from mpl_toolkits.basemap import Basemap
 from matrix_from_xls import matrix_from_xls as mfx
 import constants as cst
 import numpy as np
 import datetime
 import time as timetool, os.path
 from Rectangle import np_rec_calc as nrc
+from compare import compare_rows
 
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
 
-ax2=plt.axes(frameon=False)
-#ax2.set_size_inches(w,h)
-
-WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-            urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-
 subbasin_data = get_data()
 
 shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
-WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
 
 subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
 subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
@@ -57,47 +48,100 @@ subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_
 subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
 subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
 
+
 for plot_num in range(2):
     
     
     
-    if plot_num == 1: 
+    if plot_num == 0: 
+        ax2=plt.axes(frameon=False)
+        #ax2.set_size_inches(w,h)
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         ax2.set_title("Specific Discharge")
         file_nm = 'Discharge_(Subbasins)_Ref_Run0.csv'
         data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
         summer_Q = [nrc(data1[i],[1,260],[90,350]) for i in range(12)]
-        summer_Q[7] = summer_Q[7] - summer_Q[8] # correct N Santiam for S Santiam contribution
         
         import heapq
         data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
         data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,0,200.)
-        print data1_size
         
         colord = np.array(data1_spQ)
         
         x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
-        
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
+        file_graphics = 'spQ.png'        
         textstr = 'Willamette Water 2100' + \
                   '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
                   '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))
-        
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
         ax2.text(0., 0, textstr, fontsize=3,
-                verticalalignment='top')
-        
+                verticalalignment='top')        
         #plt.show()
-        file_graphics = 'WB.png'
         plt.savefig(file_graphics, format="png", dpi=300)
+        plt.close()       
         
+    elif plot_num == 1:
+        ax2=plt.axes(frameon=False)
+        #ax2.set_size_inches(w,h)
         
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
-    elif plot_num == 2:
-        ax2.set_title("Hydrologic Drought")
+        ax2.set_title("Change in Summer Hydrologic Drought")
+        
         file_nm = 'Discharge_(Subbasins)_Ref_Run0.csv'
 
+        data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd1 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd2 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd3 = data1
+        
+        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
+        data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
+        
+        diff_drought_days = [
+                      nrc(data_hd_binary[i],[70,260],[90,350], oper='sum') \
+                    - nrc(data_hd_binary[i],[1, 260],[20,350], oper='sum') \
+                    for i in range(12)]  #+ve numbers are increasing drought
+       
+        colord = np.array(diff_drought_days)
+        
+        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
+        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        
+        file_graphics = 'drought_days.png'        
+        textstr = 'Willamette Water 2100' + \
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+                  '\n' + '  File: ' + file_nm +\
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        ax2.text(0., 0, textstr, fontsize=3,
+                verticalalignment='top')        
+        #plt.show()
+        plt.savefig(file_graphics, format="png", dpi=300)
+        plt.close()
 
