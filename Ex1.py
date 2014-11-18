@@ -76,12 +76,6 @@ cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],
 
 WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
 
-# Metadata for bottom right corner
-#    metadata_bottomright = metadata_txt +  '\n' \
-#          + 'HJA NSF grant DEB-0832652 and' +  '\n' \
-#          + 'Roy Haggerty NSF grant EAR-1417603' + '\n'\
-#props = dict(boxstyle='round', facecolor='white', alpha=0.85, lw=0)
-
 textstr = 'Willamette Water 2100' + \
           '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
           '\n' + '  File: ' + file_nm +\
@@ -93,4 +87,4 @@ ax2.text(0., 0, textstr, fontsize=3,
 
 #plt.show()
 file_graphics = 'WB.png'
-plt.savefig(file_graphics, format="png", dpi=600)
+plt.savefig(file_graphics, format="png", dpi=300)
