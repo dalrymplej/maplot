@@ -13,7 +13,7 @@ def get_data():
             'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371),\
             'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905),\
             'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221),\
-            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48+2694079717.91,-122.230379,	44.715461),\
+            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461),\
             'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834),\
             'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177),\
             'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156),\
@@ -47,25 +47,27 @@ WBmap.imshow(im, origin='upper') #interpolation='lanczos',
 
 subbasin_data = get_data()
 
-file = 'Discharge_(Subbasins)_Ref_Run0.csv'
+file_nm = 'Discharge_(Subbasins)_Ref_Run0.csv'
 shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
 WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
 
-subbasin_data_coords = [subbasin_data[key] for key in subbasin_data]
-subbasin_data_lons = [subbasin_data_coords[i][4] for i in range(len(subbasin_data_coords))]
-subbasin_data_lats = [subbasin_data_coords[i][5] for i in range(len(subbasin_data_coords))]
-subbasin_data_order = [subbasin_data_coords[i][2] for i in range(len(subbasin_data_coords))]
-subbasin_data_area = [subbasin_data_coords[i][3] for i in range(len(subbasin_data_coords))]
+subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
+subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
+subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
+subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
+subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
+subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
 
-data1=[mfx(file,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
+data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
+data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
 data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
-data1_size=[nrc(data1[i],[1,260],[90,350]) for i in range(12)]
-for key in subbasin_data:
-    subbasin_data[key] = [subbasin_data[key],data1_size]
-data1_size[subbasin_data['North Santiam'][0][2]-1] = subbasin_data['North Santiam'][1][0] - subbasin_data['South Santiam'][1][0]
+summer_Q = [nrc(data1[i],[1,260],[90,350]) for i in range(12)]
+summer_Q[7] = summer_Q[7] - summer_Q[8] # correct N Santiam for S Santiam contribution
+
 import heapq
-data1_2nd_lgst = heapq.nlargest(2, data1_size)[1]  #find second-largest number
-data1_size = np.clip(100.*np.array(data1_size)/data1_2nd_lgst,0,100.)
+data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
+data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,0,200.)
+print data1_size
 
 colord = np.array(data1_spQ)
 
@@ -78,12 +80,12 @@ WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
 #    metadata_bottomright = metadata_txt +  '\n' \
 #          + 'HJA NSF grant DEB-0832652 and' +  '\n' \
 #          + 'Roy Haggerty NSF grant EAR-1417603' + '\n'\
-props = dict(boxstyle='round', facecolor='white', alpha=0.85, lw=0)
+#props = dict(boxstyle='round', facecolor='white', alpha=0.85, lw=0)
 
 textstr = 'Willamette Water 2100' + \
           '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-          '\n' + '  File: ' + file +\
-          '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file))
+          '\n' + '  File: ' + file_nm +\
+          '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))
 
 ax2.text(0., 0, textstr, fontsize=3,
         verticalalignment='top')
