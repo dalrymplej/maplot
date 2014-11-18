@@ -40,7 +40,6 @@ long_bounds = -121.401130054521,-124.151784119791
 subbasin_data = get_data()
 
 shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
-plt_path = 'C:\\code\\maplot pngs\\'
 
 subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
 subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
@@ -89,7 +88,7 @@ for plot_num in range(2):
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
-        plt.savefig(plt_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.savefig(file_graphics, format="png", dpi=300, bbox_inches='tight')
         plt.close()       
         
     elif plot_num == 1:
@@ -145,6 +144,6 @@ for plot_num in range(2):
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
-        plt.savefig(plt_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.savefig(file_graphics, format="png", dpi=300, bbox_inches='tight')
         plt.close()       
 
