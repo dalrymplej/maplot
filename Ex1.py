@@ -54,15 +54,16 @@ for plot_num in range(2):
     
     
     if plot_num == 0: 
-        ax2=plt.axes(frameon=False)
-        #ax2.set_size_inches(w,h)
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
         im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        ax2.set_title("Specific Discharge")
+        plt.title("Specific Discharge")
         file_nm = 'Discharge_(Subbasins)_Ref_Run0.csv'
         data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
@@ -84,15 +85,16 @@ for plot_num in range(2):
                   '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
                   '\n' + '  File: ' + file_nm +\
                   '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
-        ax2.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
-        plt.savefig(file_graphics, format="png", dpi=300)
+        plt.savefig(file_graphics, format="png", dpi=300, bbox_inches='tight')
         plt.close()       
         
     elif plot_num == 1:
-        ax2=plt.axes(frameon=False)
-        #ax2.set_size_inches(w,h)
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
@@ -100,7 +102,7 @@ for plot_num in range(2):
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
-        ax2.set_title("Change in Summer Hydrologic Drought")
+        plt.title("Change in Summer Hydrologic Drought")
         
         file_nm = 'Discharge_(Subbasins)_Ref_Run0.csv'
 
@@ -139,9 +141,9 @@ for plot_num in range(2):
                   '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
                   '\n' + '  File: ' + file_nm +\
                   '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
-        ax2.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
-        plt.savefig(file_graphics, format="png", dpi=300)
-        plt.close()
+        plt.savefig(file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.close()       
 
