@@ -29,6 +29,3 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
     else:
         raise BaseException
 
-x = range(64)
-x = np.reshape(x,[8,8])
-print np_rec_calc(x,[2,2],[6,6])
