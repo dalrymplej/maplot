@@ -13,10 +13,11 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
     
     returns a float
     '''
-    max_x = top_right[0]
-    min_x = bottom_left[0]
+    max_x = top_right[1]
+    min_x = bottom_left[1]
     max_y = top_right[0]
     min_y = bottom_left[0]
+    
     data = array_2d[min_y:max_y,min_x:max_x]
     if oper == 'sum' or oper == 'Sum':
         return np.sum(data)

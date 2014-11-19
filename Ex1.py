@@ -51,9 +51,7 @@ subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data
 subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
 subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
 
-###CHECK for numpy arrays, are early values in the first row, or the last row?
-
-plots_to_plot = [2,3]
+plots_to_plot = [0,3]
 for plot_num in plots_to_plot:
     
     
@@ -73,11 +71,11 @@ for plot_num in plots_to_plot:
         data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
-        summer_Q = [nrc(data1[i],[1,260],[90,350]) for i in range(12)]
+        summer_Q = [nrc(data1[i],[1,260],[88,350]) for i in range(12)]
         
         import heapq
         data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
-        data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,0,200.)
+        data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,30.,200.)
         
         colord = np.array(data1_spQ)
         
@@ -132,9 +130,9 @@ for plot_num in plots_to_plot:
         data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
         
         diff_drought_days = [
-                    -  nrc(data_hd_binary[i],[70,260],[90,350], oper='sum') \
-                    +  nrc(data_hd_binary[i],[1, 260],[20,350], oper='sum') \
-                    for i in range(12)]  #CHECK THIS!!+ve numbers are increasing drought
+                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') \
+                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') \
+                    for i in range(12)]  #+ve numbers are increasing drought
        
         colord = np.array(diff_drought_days)
         
@@ -174,17 +172,19 @@ for plot_num in plots_to_plot:
         file_nmWB = data_path + 'Climate_Ref_Run0.csv'
         data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
         data_hd1 = data1
-
         
         diff_ann_precip = [
-                    - nrc(data_hd1[i],[1,1],[20,365], oper='avg') \
-                    + nrc(data_hd1[i],[70, 1],[90,365], oper='avg') \
+                    + nrc(data_hd1[i],[0,0],[19,364], oper='avg') \
+                    - nrc(data_hd1[i],[69, 0],[88,364], oper='avg') \
                     for i in range(12)]  #CHECK!! +ve numbers are decreasing precip
+        print nrc(data_hd1[0],[0,0],[19,364], oper='avg')
+        print nrc(data_hd1[0],[69, 0],[88,364], oper='avg')
+        print diff_ann_precip
        
         colord = np.array(diff_ann_precip)
         
         x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_ann_precip.png'        
@@ -219,21 +219,20 @@ for plot_num in plots_to_plot:
         file_nmWB = data_path + 'Climate_Ref_Run0.csv'
         data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd1 = data1
-
         
         diff_winter_temp = [
-                    - nrc(data_hd1[i],[70,31],[90,182], oper='avg') \
-                    + nrc(data_hd1[i],[1, 31],[20,182], oper='avg') \
+                      nrc(data_hd1[i],[69,31],[88,182], oper='avg') \
+                    - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') \
                     for i in range(12)]  #+ve numbers are increasing temp
-        print 'early cent', '\t',nrc(data_hd1[i],[70,31],[90,182], oper='avg')
-        print 'late cent', '\t',nrc(data_hd1[i],[1, 31],[20,182], oper='avg')
+        print 'early cent', '\t',nrc(data_hd1[i],[69,31],[88,182], oper='avg')
+        print 'late cent', '\t',nrc(data_hd1[i],[0, 31],[19,182], oper='avg')
         print np.array(diff_winter_temp)
        
         colord = np.array(diff_winter_temp)
         
         x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
-        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_winter_Temp.png'        
         textstr = 'Willamette Water 2100' + \
