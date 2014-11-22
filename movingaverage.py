@@ -1,3 +1,13 @@
+def binomial_window(averaging_window):
+    """ return window for binomial filter"""
+    import numpy as np
+    
+    window_raw = np.array([])
+    window_raw = np.append(window_raw,[n_take_k(averaging_window-1,i) for i in range(averaging_window)])
+    window = window_raw / np.sum(window_raw)  # normalized weights
+    return window
+
+
 def n_take_k(n,k):
     """Returns (n take k),
     the binomial coefficient.

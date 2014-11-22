@@ -35,6 +35,7 @@ from Rectangle import np_rec_calc as nrc
 from compare import compare_rows
 import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from movingaverage import movingaverage, binomial_window
 
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
@@ -53,7 +54,8 @@ subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data
 subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
 subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
 
-plots_to_plot = range(1,4)
+#plots_to_plot = range(4,5)
+plots_to_plot = [0,5]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -251,8 +253,57 @@ for plot_num in plots_to_plot:
 
 
 
-############  Winter Temperature w other symbol ############    
+############  Summer Hydrologic Drought w mini figs ############    
     elif plot_num == 4:
+        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
+       
+        plt.close()
+        data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd1 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd2 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd3 = data1
+        
+        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
+        data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
+        
+        summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+        baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
+        
+        window = binomial_window(15)
+        summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)]
+        for i in range(11):
+            plt.figure(figsize=(0.6,0.6))
+            plt.axis('off')
+            plt.ylim( (-20,50) )
+            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]>=0., facecolor='red',lw=0,alpha=0.95)
+            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]<=0., facecolor='blue',lw=0,alpha=0.95)
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        for i in range(11,12):
+            plt.figure(figsize=(1.1,0.6))
+            plt.axis('off')
+            plt.ylim((-20,50))
+            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95)
+            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95)
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        
+#        diff_drought_days = [
+#                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') \
+#                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') \
+#                    for i in range(12)]  #+ve numbers are increasing drought
+
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
@@ -263,26 +314,12 @@ for plot_num in plots_to_plot:
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
-        plt.title("Change in Winter (Nov 1 - Mar 31) Temp")
-        
-        file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
-        data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-        file_nmWB = data_path + 'Climate_Ref_Run0.csv'
-        data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
-        data_hd1 = data1
-        
-        diff_winter_temp = [
-                      nrc(data_hd1[i],[69,31],[88,182], oper='avg') \
-                    - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') \
-                    for i in range(12)]  #+ve numbers are increasing temp
-        
-        colord = np.array(diff_winter_temp)
+        plt.title("Change in Summer Hydrologic Drought")
         
         x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
-        WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
+        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
         
-        file_graphics = 'diff_winter_Temp_(trial).png'        
+        file_graphics = 'change_in_drought_days_wGrphs.png'        
         textstr = 'Willamette Water 2100' + \
                   '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
                   '\n' + '  File: ' + file_nm +\
@@ -290,10 +327,91 @@ for plot_num in plots_to_plot:
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         # Add the plane marker at the last point.
-        marker = np.array(Image.open('markerexample.png'))
-        im = OffsetImage(marker, zoom=1)
-        ab = AnnotationBbox(im, (x[-1],y[-1]), xycoords='data', frameon=False)
-        WBmap._check_ax().add_artist(ab)
+        for i in range(12):
+            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+            im = OffsetImage(marker, zoom=1)
+            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False)
+            WBmap._check_ax().add_artist(ab)
 #        plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
         plt.close()       
+
+
+
+
+############  Winter Temperature w mini figs ############    
+    elif plot_num == 5:
+        file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
+        file_nmWB = data_path + 'Climate_Ref_Run0.csv'
+       
+        plt.close()
+        data1=[mfx(file_nm, column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+        data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+        data_hd1 = data1
+        data_winter = [data_hd1[i][:,31:182] for i in range(12)]
+        winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1)
+                   for i in range(11)]
+        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+        data_hd2 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1)
+                   for i in range(11)]
+        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+        data_hd3 = data1
+        
+        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+        baseline = [nrc(data_avg[i],[0, 31],[29,182]) for i in range(12)]  #1's are drought
+                
+        window = binomial_window(15)
+        winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i]) for i in range(12)]
+        for i in range(11):
+            plt.figure(figsize=(0.6,0.6))
+            plt.axis('off')
+            plt.ylim( (-3,7) )
+            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]>=0., facecolor='red',lw=0,alpha=0.95) 
+            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]<=0., facecolor='blue',lw=0,alpha=0.95) 
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        for i in range(11,12):
+            plt.figure(figsize=(1.1,0.6))
+            plt.axis('off')
+            plt.ylim((-3,7))
+            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
+            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        
+        plt.title("Change in Winter Temperatures (Nov - Mar)")
+        
+        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
+        
+        file_graphics = 'change_in_winter_temp_wGrphs.png'        
+        textstr = 'Willamette Water 2100' + \
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+                  '\n' + '  File: ' + file_nm +\
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        plt.text(0., 0, textstr, fontsize=3,
+                verticalalignment='top')        
+        # Add the plane marker at the last point.
+        for i in range(12):
+            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+            im = OffsetImage(marker, zoom=1)
+            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False)
+            WBmap._check_ax().add_artist(ab)
+#        plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.close()       
+
