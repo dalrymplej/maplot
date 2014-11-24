@@ -225,3 +225,4 @@ def timeseries(ts,leap_yr='none',missing_data='pad', start_date = 'none'):
     data_yr_tmp = np.array(ts)
     
     return data_yr_tmp
+    

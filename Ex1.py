@@ -23,6 +23,16 @@ def get_data():
 
     return data
 
+def getfilenames(data_path, searchword):
+    import glob
+    files = glob.glob(data_path + '/*.csv')
+    filenamelist = []
+    fileswopath = [eachfile.partition(data_path)[2] for eachfile in files]    
+    for filename in fileswopath:
+        if filename.startswith(searchword): filenamelist.append(data_path+filename)
+    return filenamelist
+
+
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from mpl_toolkits import basemap
@@ -366,6 +376,7 @@ for plot_num in plots_to_plot:
                 
         window = binomial_window(15)
         winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i]) for i in range(12)]
+        
         for i in range(11):
             plt.figure(figsize=(0.6,0.6))
             plt.axis('off')
@@ -415,3 +426,84 @@ for plot_num in plots_to_plot:
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
         plt.close()       
 
+
+
+
+############  Econ w mini figs ############    
+    elif plot_num == 6:
+        plt.close()
+        
+        econ_files = getfilenames(data_path,'subbasin')
+        econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]
+        for file_nm in econ_files:
+#            file_nm=data_path+'subbasin_tot_ac_of_developed_land_by_SUB_AREA_EarlyReFill_Run0.csv'
+            file_nmWB = file_nm     
+            title = file_nm.partition(data_path)[2]
+            png_file_nm = title+'.png'
+            data_v = np.array(np.genfromtxt(file_nm, delimiter=',',skip_header=1)) # Read csv file
+            data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
+            data1.append(data_v[2:,1])
+            data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
+            maxd = np.max(np.array([np.max(data1[i]) for i in range(11)]))
+            mind = np.min(np.array([np.min(data1[i]) for i in range(11)]))
+            if maxd >= abs(mind):
+                xctr = 0.75
+                yctr = 0.5
+            else:
+                xctr = 0.75
+                yctr = 0.7
+#            ratio = abs(mind)/abs(maxd)
+#            if ratio > 5: latshift = 0.2
+                            
+    #        window = binomial_window(15)
+    #        winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i]) for i in range(12)]
+            for i in range(11):
+                plt.figure(figsize=(0.6,0.6))
+                plt.axis('off')
+                plt.ylim( (mind,maxd) )
+                plt.fill_between(range(89),0.,data1[i],where=data1[i]>=0., facecolor='red',lw=0,alpha=0.95) 
+                plt.fill_between(range(89),0.,data1[i],where=data1[i]<=0., facecolor='blue',lw=0,alpha=0.95) 
+                plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+                plt.close()
+#            for i in range(11,12):
+#                plt.figure(figsize=(1.1,0.6))
+#                plt.axis('off')
+#                plt.ylim((mind,maxd))
+#                plt.fill_between(range(89),0.,data1[i],where=data1[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
+#                plt.fill_between(range(89),0.,data1[i],where=data1[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
+#                plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+#                plt.close()
+            
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            
+            plt.title(title)
+            
+            x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+#            x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
+            
+            file_graphics = png_file_nm        
+            textstr = 'Willamette Water 2100' + \
+                      '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+                      '\n' + '  File: ' + file_nm +\
+                      '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+            plt.text(0., 0, textstr, fontsize=3,
+                    verticalalignment='top')        
+            # Add the plane marker at the last point.
+            for i in range(11):
+                marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+                im = OffsetImage(marker, zoom=1)
+                ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
+                WBmap._check_ax().add_artist(ab)
+    #        plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+            plt.close()       
+            
+#            assert False
