@@ -31,7 +31,24 @@ def getfilenames(data_path, searchword):
     for filename in fileswopath:
         if filename.startswith(searchword): filenamelist.append(data_path+filename)
     return filenamelist
+    
+def ct(water_yr_array):
+    """
+    Calculate center of timing for each water year in the water_yr_array
+    Return CT for each year (vector)
+    water_yr_array = array size 365 by water years containing values
+    """
+    CT = np.zeros_like(range(0, water_yr_array.shape[0]))
+    m0 = np.zeros_like(range(0, water_yr_array.shape[0]))
+    m1 = np.zeros_like(range(0, water_yr_array.shape[0]))
+    m0 = [np.trapz(water_yr_array[i,:], x=None, dx=1.0, axis=-1) for i in range(89)]
+    m1 = [np.trapz(np.multiply(water_yr_array[i,:],range(365)), x=None, dx=1.0, axis=-1) for i in range(89)]
+    CT = np.divide(m1,m0) + cst.day_of_year_oct1
+    return CT
 
+###############################################################################
+###############################################################################
+###############################################################################
 
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -65,7 +82,7 @@ subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_
 subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [0,5]
+plots_to_plot = [0,7]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -309,11 +326,6 @@ for plot_num in plots_to_plot:
             plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
             plt.close()
         
-#        diff_drought_days = [
-#                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') \
-#                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') \
-#                    for i in range(12)]  #+ve numbers are increasing drought
-
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
@@ -507,3 +519,92 @@ for plot_num in plots_to_plot:
             plt.close()       
             
 #            assert False
+            
+            
+            
+            
+            
+############  Center of Timing w mini figs ############    
+    elif plot_num == 7:
+        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
+       
+        plt.close()
+        data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd1 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], 
+                   skip=cst.day_of_year_oct1) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd2 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], 
+                   skip=cst.day_of_year_oct1) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd3 = data1
+        
+        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+        ctList = [np.array(ct(data_avg[i])) for i in range(12)]
+        ctdata_hd1 = [np.array(ct(data_hd1[i])) for i in range(12)]
+        
+        baseline = [np.mean(ctList[i][:30]) for i in range(12)]
+        
+        window = binomial_window(15)
+        delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata_hd1[i],window), baseline[i]) for i in range(12)]
+        maxd = np.max(np.array([np.max(delta_discharge_timing[i][8:83]) for i in range(12)]))
+        mind = np.min(np.array([np.min(delta_discharge_timing[i][8:83]) for i in range(12)]))
+        print 'Max timing advance = ','\t',maxd
+        print 'Min timing advance = ','\t',mind
+        delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
+        for i in range(11):
+            plt.figure(figsize=(0.6,0.6))
+            plt.axis('off')
+            plt.ylim( (mind,maxd) )
+            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]>=0., facecolor='red',lw=0,alpha=0.95)
+            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]<=0., facecolor='blue',lw=0,alpha=0.95)
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        for i in range(11,12):
+            plt.figure(figsize=(1.1,0.6))
+            plt.axis('off')
+            plt.ylim( (mind,maxd) )
+            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]>=0., facecolor='red',lw=0,alpha = 0.95)
+            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]<=0., facecolor='blue',lw=0,alpha = 0.95)
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        
+        plt.title("Change in Timing of Discharge (CT)")
+        
+        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
+        
+        file_graphics = 'change_in_discharge_timing_wGrphs.png'        
+        textstr = 'Willamette Water 2100' + \
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+                  '\n' + '  File: ' + file_nm +\
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        plt.text(0., 0, textstr, fontsize=3,
+                verticalalignment='top')        
+        # Add the plane marker at the last point.
+        for i in range(12):
+            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+            im = OffsetImage(marker, zoom=1)
+            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False)
+            WBmap._check_ax().add_artist(ab)
+#        plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.close()       
+
+
+
+
