@@ -7,18 +7,18 @@
 def get_data():
     """ Returns tuple of data"""
     data= {\
-            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1), \
-            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19),\
-            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21),\
-            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3),\
-            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5),\
-            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7),\
-            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9),\
-            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11),\
-            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13),\
-            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15),\
-            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17),\
-            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2)\
+            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1), \
+            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10),\
+            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21, 11),\
+            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3, 2),\
+            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5, 3),\
+            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7, 4),\
+            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5),\
+            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6),\
+            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7),\
+            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8),\
+            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),\
+            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)\
             }
 
     return data
@@ -80,9 +80,10 @@ subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_
 subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
 subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
 subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
+subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [0,7]
+plots_to_plot = [0,8]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -600,6 +601,92 @@ for plot_num in plots_to_plot:
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
             ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False)
+            WBmap._check_ax().add_artist(ab)
+#        plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.close()       
+
+
+
+
+############  Winter Temperature w mini figs ############    
+    elif plot_num == 8:
+        file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
+        file_nmWB = data_path + 'Snow_(mm)_Ref_Run0.csv'
+       
+        plt.close()
+        data1=[mfx(file_nm, column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
+        data1.append(mfx(file_nmWB, column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+#        winter_tmps = [np.max(data_hd1[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
+        SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1)
+                   for i in range(11)]
+        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
+        SWE2 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1)
+                   for i in range(11)]
+        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
+        SWE3 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+        
+        SWE_avg = [(SWE1[i]+SWE2[i]+SWE3[i])/3. for i in range(12)]
+        baseline = [np.mean(SWE_avg[i][0:10]) for i in range(12)]  #1's are drought
+                
+        window = binomial_window(15)
+        SWE_smthd = [np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)]
+        maxd = np.max(np.array([np.max(SWE_smthd[i][8:83]) for i in range(12)]))
+        mind = np.min(np.array([np.min(SWE_smthd[i][8:83]) for i in range(12)]))
+        SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
+        print SWE_smthd[11]
+        print len(SWE_smthd[11])
+        xctr = 0.5
+        yctr = 0.5
+        
+        for i in range(11):
+            plt.figure(figsize=(0.6,0.6))
+            plt.axis('off')
+            plt.ylim( (mind,maxd) )
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha=0.95) 
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha=0.95) 
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        for i in range(11,12):
+            plt.figure(figsize=(1.1,0.6))
+            plt.axis('off')
+            plt.ylim( (mind,maxd) )
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha = 0.95) 
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha = 0.95) 
+            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
+        
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        
+        plt.title("Change in Max SWE")
+        
+        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
+        
+        file_graphics = 'change_in_max_SWE_wGrphs.png'        
+        textstr = 'Willamette Water 2100' + \
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+                  '\n' + '  File: ' + file_nm +\
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        plt.text(0., 0, textstr, fontsize=3,
+                verticalalignment='top')        
+        # Add the plane marker at the last point.
+        for i in range(12):
+            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+            im = OffsetImage(marker, zoom=1)
+            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
             WBmap._check_ax().add_artist(ab)
 #        plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
