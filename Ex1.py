@@ -46,6 +46,16 @@ def ct(water_yr_array):
     CT = np.divide(m1,m0) + cst.day_of_year_oct1
     return CT
 
+def get_metadata():
+    """Add metadata to plot
+    """
+    import time as timetool, os.path
+    textstr = 'Willamette Water 2100' + \
+              '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+              '\n' + '  File: ' + file_nm +\
+              '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+    return textstr
+
 ###############################################################################
 ###############################################################################
 ###############################################################################
@@ -57,7 +67,6 @@ from matrix_from_xls import matrix_from_xls as mfx
 import constants as cst
 import numpy as np
 import datetime
-import time as timetool, os.path
 from Rectangle import np_rec_calc as nrc
 from compare import compare_rows
 import Image
@@ -116,11 +125,8 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
-        file_graphics = 'spQ.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        file_graphics = 'spQ.png'     
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -174,10 +180,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'drought_days.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -221,10 +224,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_ann_precip.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -268,10 +268,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_winter_Temp.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -343,13 +340,9 @@ for plot_num in plots_to_plot:
         x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
         
         file_graphics = 'change_in_drought_days_wGrphs.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
-        # Add the plane marker at the last point.
         for i in range(12):
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
@@ -423,13 +416,9 @@ for plot_num in plots_to_plot:
         x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
         
         file_graphics = 'change_in_winter_temp_wGrphs.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
-        # Add the plane marker at the last point.
         for i in range(12):
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
@@ -503,13 +492,9 @@ for plot_num in plots_to_plot:
 #            x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
             
             file_graphics = png_file_nm        
-            textstr = 'Willamette Water 2100' + \
-                      '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                      '\n' + '  File: ' + file_nm +\
-                      '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+            textstr = get_metadata()
             plt.text(0., 0, textstr, fontsize=3,
                     verticalalignment='top')        
-            # Add the plane marker at the last point.
             for i in range(11):
                 marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
                 im = OffsetImage(marker, zoom=1)
@@ -590,13 +575,9 @@ for plot_num in plots_to_plot:
         x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
         
         file_graphics = 'change_in_discharge_timing_wGrphs.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
-        # Add the plane marker at the last point.
         for i in range(12):
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
@@ -676,13 +657,9 @@ for plot_num in plots_to_plot:
         x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
         
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
-        textstr = 'Willamette Water 2100' + \
-                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
-                  '\n' + '  File: ' + file_nm +\
-                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+        textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
-        # Add the plane marker at the last point.
         for i in range(12):
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
