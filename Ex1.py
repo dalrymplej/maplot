@@ -598,7 +598,6 @@ for plot_num in plots_to_plot:
         plt.close()
         data1=[mfx(file_nm, column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
         data1.append(mfx(file_nmWB, column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
-#        winter_tmps = [np.max(data_hd1[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
         SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
         data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
@@ -619,8 +618,6 @@ for plot_num in plots_to_plot:
         maxd = np.max(np.array([np.max(SWE_smthd[i][8:83]) for i in range(12)]))
         mind = np.min(np.array([np.min(SWE_smthd[i][8:83]) for i in range(12)]))
         SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
-        print SWE_smthd[11]
-        print len(SWE_smthd[11])
         xctr = 0.7
         yctr = 0.75
         
@@ -640,7 +637,20 @@ for plot_num in plots_to_plot:
             plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha = 0.95) 
             plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
             plt.close()
+        for i in range(0,1):
+            plt.figure(figsize=(0.6,0.6))
+            plt.ylim( (mind,maxd) )
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha = 0.95) 
+            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha = 0.95) 
+            font = {'size':'6'}           
+            mpl.rc('font', **font)
+            frame1 = plt.gca()
+            frame1.axes.get_xaxis().set_visible(False)
+            plt.ylabel(r'$\Delta \, SWE\,$ [cm]', fontsize=6)
+            plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+            plt.close()
         
+        mpl.rcdefaults()
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
@@ -651,16 +661,18 @@ for plot_num in plots_to_plot:
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
-        plt.title("Change in Max SWE")
+        plt.title("Change in Basin-Averaged Max SWE")
         
         x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
         x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
+        x.append(0.); y.append(0.)
+        x[12],y[12]=WBmap(-123.8,43.9)
         
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
         textstr = get_metadata()
         plt.text(0., 0, textstr, fontsize=3,
                 verticalalignment='top')        
-        for i in range(12):
+        for i in range(13):
             marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
             im = OffsetImage(marker, zoom=1)
             ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
