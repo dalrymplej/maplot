@@ -609,7 +609,7 @@ for plot_num in plots_to_plot:
 
 
 
-############  Winter Temperature w mini figs ############    
+############  Max SWE w mini figs ############    
     elif plot_num == 8:
         file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
         file_nmWB = data_path + 'Snow_(mm)_Ref_Run0.csv'
@@ -620,14 +620,14 @@ for plot_num in plots_to_plot:
 #        winter_tmps = [np.max(data_hd1[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
         SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE2 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE3 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
         SWE_avg = [(SWE1[i]+SWE2[i]+SWE3[i])/3. for i in range(12)]
@@ -640,8 +640,8 @@ for plot_num in plots_to_plot:
         SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
         print SWE_smthd[11]
         print len(SWE_smthd[11])
-        xctr = 0.5
-        yctr = 0.5
+        xctr = 0.7
+        yctr = 0.75
         
         for i in range(11):
             plt.figure(figsize=(0.6,0.6))
