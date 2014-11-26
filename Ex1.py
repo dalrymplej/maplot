@@ -55,6 +55,83 @@ def get_metadata():
               '\n' + '  File: ' + file_nm +\
               '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
     return textstr
+    
+def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs):
+    """Write tiny figs to be plotted on map
+    """
+    from matplotlib import pyplot as plt
+    
+    for i in range(len(datalist)):
+        plt.figure(figsize = figsize[i])
+        plt.axis('off')
+        plt.ylim( (mind,maxd) )
+        plt.fill_between(range(num_yrs),0.,datalist[i],where=datalist[i]>=0., facecolor=redblue[0],lw=0,alpha=0.95) 
+        plt.fill_between(range(num_yrs),0.,datalist[i],where=datalist[i]<=0., facecolor=redblue[1],lw=0,alpha=0.95) 
+        plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+        plt.close()
+
+    return
+
+
+def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
+    """Write tiny legend to be plotted on map
+    """
+    from matplotlib import pyplot as plt
+    
+    figleg = plt.figure(figsize=figsize)
+    axleg = Subplot(figleg,111)
+    figleg.add_subplot(axleg)
+    axleg.axis['top'].set_visible(False)
+    axleg.axis['bottom'].set_visible(False)
+    axleg.axis['right'].set_visible(False)
+    yloc = plt.MaxNLocator(5)
+    axleg.yaxis.set_major_locator(yloc)
+    plt.ylim( (mind,maxd) )
+    plt.fill_between(range(num_yrs),0.,data,where=data>=0., facecolor=redblue[0],lw=0,alpha = 0.95) 
+    plt.fill_between(range(num_yrs),0.,data,where=data<=0., facecolor=redblue[1],lw=0,alpha = 0.95) 
+    font = {'size':'6'}           
+    mpl.rc('font', **font)
+    plt.ylabel(ylabel, fontsize=6)
+    axleg.text(-30., mind*1.5, xlabel, fontsize=6,
+            verticalalignment='top')
+    plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+    plt.close()
+    mpl.rcdefaults()
+
+    return
+    
+    
+    
+def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
+    """Write the map
+    """
+    from matplotlib import pyplot as plt
+    
+    fig = plt.figure(figsize=(6,8))
+    ax2 = fig.add_axes()
+    plt.axes(frameon=False)
+    
+    WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+    im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+    WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+    WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+    
+    plt.title(title)
+    
+    x,y=WBmap(lons,lats)
+    
+    plt.text(0., 0., textstr, fontsize=3,verticalalignment='top')        
+    for i in graphs:
+        marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
+        im = OffsetImage(marker, zoom=1)
+        ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
+        WBmap._check_ax().add_artist(ab)
+#        plt.show()
+    plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+    plt.close()       
+
+    return
 
 ###############################################################################
 ###############################################################################
@@ -93,7 +170,7 @@ subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasi
 subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [6]
+plots_to_plot = [4]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -312,74 +389,29 @@ for plot_num in plots_to_plot:
         mind = np.min(np.array([np.min(summer_dr_d_smthd[i]) for i in range(12)]))
         xctr = 0.5
         yctr = 0.5
+
+        figsize=[(0.6,0.6) for i in range(11)]
+        figsize.append((1.1,0.6))
+        redblue = ['red','blue']
+        num_yrs = len(summer_dr_d_smthd[0])
+        write_tinyfigs(summer_dr_d_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        for i in range(11):
-            plt.figure(figsize=(0.6,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]>=0., facecolor='red',lw=0,alpha=0.95)
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]<=0., facecolor='blue',lw=0,alpha=0.95)
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(11,12):
-            plt.figure(figsize=(1.1,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95)
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95)
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(0,1):
-            figleg = plt.figure(figsize=(0.6,0.6))
-            axleg = Subplot(figleg,111)
-            figleg.add_subplot(axleg)
-            axleg.axis['top'].set_visible(False)
-            axleg.axis['bottom'].set_visible(False)
-            axleg.axis['right'].set_visible(False)
-            yloc = plt.MaxNLocator(5)
-            axleg.yaxis.set_major_locator(yloc)
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-            plt.fill_between(range(89),0.,summer_dr_d_smthd[i],where=summer_dr_d_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-            font = {'size':'6'}           
-            mpl.rc('font', **font)
-            plt.ylabel(r'$\Delta \, Drought\,$ [days]', fontsize=6)
-            axleg.text(-30., mind*1.5, 'Red = Drier', fontsize=6,
-                    verticalalignment='top')
-            plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-            mpl.rcdefaults()
+        figsize_leg = (0.6,0.6)
+        ylabel = r'$\Delta \, Drought\,$ [days]'
+        xlabel = 'Red = Drier'
+        write_legend(summer_dr_d_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
         
         
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Summer Hydrologic Drought")
-        
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
-        x.append(0.); y.append(0.)
-        x[12],y[12]=WBmap(-123.8,43.9)
-                
-        file_graphics = 'change_in_drought_days_wGrphs.png'        
+        title = "Change in Summer Hydrologic Drought"
+        lons = subbasin_data_lons
+        lons[11]=subbasin_data_lons[11]+0.2
+        lons.append(-123.8)
+        lats = subbasin_data_lats
+        lats.append(43.9)
+        file_graphics = 'change_in_drought_days_wGrphs.png'
         textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
-                verticalalignment='top')        
-        for i in range(13):
-            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-            im = OffsetImage(marker, zoom=1)
-            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
-            WBmap._check_ax().add_artist(ab)
-#        plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
+
+        write_map(title, lons, lats, file_graphics, textstr, shp)
 
 
 
@@ -407,82 +439,36 @@ for plot_num in plots_to_plot:
         data_hd3 = data1
         
         data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
-        baseline = [nrc(data_avg[i],[0, 31],[29,182]) for i in range(12)]  #1's are drought
+        baseline = [nrc(data_avg[i],[0, 10],[29,182]) for i in range(12)]  
                 
         window = binomial_window(15)
-        winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i]) for i in range(12)]
+        winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i])[8:83] for i in range(12)]
         maxd = np.max(np.array([np.max(winter_temps_smthd[i]) for i in range(12)]))
         mind = np.min(np.array([np.min(winter_temps_smthd[i]) for i in range(12)]))
         xctr = 0.5
         yctr = 0.75
+
+        figsize=[(0.6,0.6) for i in range(11)]
+        figsize.append((1.1,0.6))
+        redblue = ['red','blue']
+        num_yrs = len(winter_temps_smthd[0])
+        write_tinyfigs(winter_temps_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        for i in range(11):
-            plt.figure(figsize=(0.6,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]>=0., facecolor='red',lw=0,alpha=0.95) 
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]<=0., facecolor='blue',lw=0,alpha=0.95) 
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(11,12):
-            plt.figure(figsize=(1.1,0.6))
-            plt.axis('off')
-            plt.ylim((mind,maxd))
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(0,1):
-            figleg = plt.figure(figsize=(0.6,0.6))
-            axleg = Subplot(figleg,111)
-            figleg.add_subplot(axleg)
-            axleg.axis['top'].set_visible(False)
-            axleg.axis['bottom'].set_visible(False)
-            axleg.axis['right'].set_visible(False)
-            yloc = plt.MaxNLocator(5)
-            axleg.yaxis.set_major_locator(yloc)
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-            plt.fill_between(range(89),0.,winter_temps_smthd[i],where=winter_temps_smthd[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-            font = {'size':'6'}           
-            mpl.rc('font', **font)
-            plt.ylabel(r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]', fontsize=6)
-            axleg.text(-30., mind*1.5, 'Red = Warmer', fontsize=6,
-                    verticalalignment='top')
-            plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-            mpl.rcdefaults()
+        figsize_leg = (0.6,0.6)
+        ylabel = r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]'
+        xlabel = 'Red = Warmer'
+        write_legend(winter_temps_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
         
-        
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Winter Temperatures (Nov - Mar)")
-        
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
-        x.append(0.); y.append(0.)
-        x[12],y[12]=WBmap(-123.8,43.9)
-        
-        file_graphics = 'change_in_winter_temp_wGrphs.png'        
+        title = "Change in Winter Temperatures (Nov - Mar)"
+        lons = subbasin_data_lons
+        lons[11]=subbasin_data_lons[11]+0.2
+        lons.append(-123.8)
+        lats = subbasin_data_lats
+        lats.append(43.9)
+        file_graphics = 'change_in_winter_temp_wGrphs.png'
         textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
-                verticalalignment='top')        
-        for i in range(13):
-            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-            im = OffsetImage(marker, zoom=1)
-            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
-            WBmap._check_ax().add_artist(ab)
-#        plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
+
+        write_map(title, lons, lats, file_graphics, textstr, shp)
 
 
 
@@ -510,80 +496,29 @@ for plot_num in plots_to_plot:
             else:
                 xctr = 0.75
                 yctr = 0.7
-#            ratio = abs(mind)/abs(maxd)
-#            if ratio > 5: latshift = 0.2
-                            
-    #        window = binomial_window(15)
-    #        winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i]) for i in range(12)]
-            for i in range(11):
-                plt.figure(figsize=(0.6,0.6))
-                plt.axis('off')
-                plt.ylim( (mind,maxd) )
-                plt.fill_between(range(89),0.,data1[i],where=data1[i]>=0., facecolor='red',lw=0,alpha=0.95) 
-                plt.fill_between(range(89),0.,data1[i],where=data1[i]<=0., facecolor='blue',lw=0,alpha=0.95) 
-                plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-                plt.close()
-#            for i in range(11,12):
-#                plt.figure(figsize=(1.1,0.6))
-#                plt.axis('off')
-#                plt.ylim((mind,maxd))
-#                plt.fill_between(range(89),0.,data1[i],where=data1[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-#                plt.fill_between(range(89),0.,data1[i],where=data1[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-#                plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-#                plt.close()
-            for i in range(4,5):
-                figleg = plt.figure(figsize=(0.6,0.6))
-                axleg = Subplot(figleg,111)
-                figleg.add_subplot(axleg)
-                axleg.axis['top'].set_visible(False)
-                axleg.axis['bottom'].set_visible(False)
-                axleg.axis['right'].set_visible(False)
-                yloc = plt.MaxNLocator(5)
-                axleg.yaxis.set_major_locator(yloc)
-                plt.ylim( (mind,maxd) )
-                plt.fill_between(range(89),0.,data1[i],where=data1[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-                plt.fill_between(range(89),0.,data1[i],where=data1[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-                font = {'size':'6'}           
-                mpl.rc('font', **font)
-                plt.ylabel(r'$\Delta \, value\,$', fontsize=6)
-                plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-                plt.close()        
-                mpl.rcdefaults()
+                
+            figsize=[(0.6,0.6) for i in range(11)]
+ #           figsize.append((1.1,0.6))
+            redblue = ['red','blue']
+            num_yrs = len(data1[0])
+            write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
             
-            fig = plt.figure(figsize=(6,8))
-            ax2 = fig.add_axes()
-            plt.axes(frameon=False)
+            figsize_leg = (0.6,0.6)
+            ylabel = r'$\Delta \, value\,$'
+            xlabel = ' '
+            write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
             
-            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-            im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-            
-            plt.title(title)
-            
-            x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-            x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
-            x.append(0.); y.append(0.)
-            x[12],y[12]=WBmap(-123.8,43.9)
-            
+            lons = subbasin_data_lons
+            lons[11]=subbasin_data_lons[11]+0.2
+            lons.append(-123.8)
+            lats = subbasin_data_lats
+            lats.append(43.9)
             file_graphics = png_file_nm        
             textstr = get_metadata()
-            plt.text(0., 0, textstr, fontsize=3,
-                    verticalalignment='top')        
-            for i in range(11):
-                marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-                im = OffsetImage(marker, zoom=1)
-                ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
-                WBmap._check_ax().add_artist(ab)
-            for i in range(12,13):
-                marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-                im = OffsetImage(marker, zoom=1)
-                ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
-                WBmap._check_ax().add_artist(ab)
-    #        plt.show()
-            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-            plt.close()       
+    
+            graphs = range(11)
+            graphs.append(12)
+            write_map(title, lons, lats, file_graphics, textstr, shp, graphs=graphs)
             
 #            assert False
             
@@ -623,70 +558,28 @@ for plot_num in plots_to_plot:
         print 'Max timing advance = ','\t',maxd
         print 'Min timing advance = ','\t',mind
         delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
-        for i in range(11):
-            plt.figure(figsize=(0.6,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]>=0., facecolor='red',lw=0,alpha=0.95)
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]<=0., facecolor='blue',lw=0,alpha=0.95)
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(11,12):
-            plt.figure(figsize=(1.1,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]>=0., facecolor='red',lw=0,alpha = 0.95)
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]<=0., facecolor='blue',lw=0,alpha = 0.95)
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(0,1):
-            figleg = plt.figure(figsize=(0.6,0.6))
-            axleg = Subplot(figleg,111)
-            figleg.add_subplot(axleg)
-            axleg.axis['top'].set_visible(False)
-            axleg.axis['bottom'].set_visible(False)
-            axleg.axis['right'].set_visible(False)
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]>=0., facecolor='red',lw=0,alpha = 0.95) 
-            plt.fill_between(range(75),0.,delta_discharge_timing[i],where=delta_discharge_timing[i]<=0., facecolor='blue',lw=0,alpha = 0.95) 
-            font = {'size':'6'}           
-            mpl.rc('font', **font)
-            plt.ylabel(r'$\Delta \, CT\,$ [days]', fontsize=6)
-            axleg.text(-30., mind*1.5, 'Red = Earlier', fontsize=6,
-                    verticalalignment='top')
-            plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()        
-            mpl.rcdefaults()
+
+        figsize=[(0.6,0.6) for i in range(11)]
+        figsize.append((1.1,0.6))
+        redblue = ['red','blue']
+        num_yrs = len(delta_discharge_timing[0])
+        write_tinyfigs(delta_discharge_timing,figsize,mind,maxd,redblue, num_yrs)
+        
+        figsize_leg = (0.6,0.6)
+        ylabel = r'$\Delta \, CT\,$ [days]'
+        xlabel = 'Red = Earlier'
+        write_legend(delta_discharge_timing[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
             
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Timing of Discharge (CT)")
-        
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
-        x.append(0.); y.append(0.)
-        x[12],y[12]=WBmap(-123.8,43.9)
-        
+        title = "Change in Timing of Discharge (CT)"
+        lons = subbasin_data_lons
+        lons[11]=subbasin_data_lons[11]+0.2
+        lons.append(-123.8)
+        lats = subbasin_data_lats
+        lats.append(43.9)
         file_graphics = 'change_in_discharge_timing_wGrphs.png'        
         textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
-                verticalalignment='top')        
-        for i in range(13):
-            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-            im = OffsetImage(marker, zoom=1)
-            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False)
-            WBmap._check_ax().add_artist(ab)
-#        plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
+
+        write_map(title, lons, lats, file_graphics, textstr, shp)
 
 
 
@@ -722,71 +615,25 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
         
-        for i in range(11):
-            plt.figure(figsize=(0.6,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha=0.95) 
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha=0.95) 
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(11,12):
-            plt.figure(figsize=(1.1,0.6))
-            plt.axis('off')
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha = 0.95) 
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha = 0.95) 
-            plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-        for i in range(0,1):
-            figleg = plt.figure(figsize=(0.6,0.6))
-            axleg = Subplot(figleg,111)
-            figleg.add_subplot(axleg)
-            axleg.axis['top'].set_visible(False)
-            axleg.axis['bottom'].set_visible(False)
-            axleg.axis['right'].set_visible(False)
-            plt.ylim( (mind,maxd) )
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]>=0., facecolor='blue',lw=0,alpha = 0.95) 
-            plt.fill_between(range(75),0.,SWE_smthd[i],where=SWE_smthd[i]<=0., facecolor='red',lw=0,alpha = 0.95) 
-            font = {'size':'6'}           
-            mpl.rc('font', **font)
-            plt.ylabel(r'$\Delta \, SWE\,$ [cm]', fontsize=6)
-            axleg.text(-30., mind*1.5, 'Red = Less SWE', fontsize=6,
-                    verticalalignment='top')
-            plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
-            plt.close()
-            mpl.rcdefaults()
+        figsize=[(0.6,0.6) for i in range(11)]
+        figsize.append((1.1,0.6))
+        redblue = ['blue','red']
+        num_yrs = len(SWE_smthd[0])
+        write_tinyfigs(SWE_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
+        figsize_leg = (0.6,0.6)
+        ylabel = r'$\Delta \, SWE\,$ [cm]'
+        xlabel = 'Red = Less SWE'
+        write_legend(SWE_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
         
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Basin-Averaged Max SWE")
-        
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
-        x[11],y[11]=WBmap(subbasin_data_lons[11]+0.2,subbasin_data_lats[11])
-        x.append(0.); y.append(0.)
-        x[12],y[12]=WBmap(-123.8,43.9)
-        
+        title = "Change in Basin-Averaged Max SWE"
+        lons = subbasin_data_lons
+        lons[11]=subbasin_data_lons[11]+0.2
+        lons.append(-123.8)
+        lats = subbasin_data_lats
+        lats.append(43.9)
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
         textstr = get_metadata()
-        plt.text(0., 0., textstr, fontsize=3,
-                verticalalignment='top')        
-        for i in range(13):
-            marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
-            im = OffsetImage(marker, zoom=1)
-            ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
-            WBmap._check_ax().add_artist(ab)
-#        plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
 
-
-
-
+        write_map(title, lons, lats, file_graphics, textstr, shp)
+        
