@@ -20,8 +20,16 @@ def get_data():
             'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),\
             'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)\
             }
+    scenarios = {\
+            'Reference':                '_Ref_Run0',\
+            'HighClim':                 '_HighClim_Run0',\
+            'LowClim':                  '_LowClim_Run0',\
+            'HighPop':                  '_HighPop_Run0',\
+            'UrbExpand':                '_UrbExpand_Run0',\
+            'FireSuppress':             '_FireSuppress_Run0'\
+            }
 
-    return data
+    return data, scenarios
 
 def getfilenames(data_path, searchword):
     import glob
@@ -101,7 +109,6 @@ def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
     return
     
     
-    
 def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
     """Write the map
     """
@@ -154,7 +161,7 @@ from movingaverage import movingaverage, binomial_window
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
 
-subbasin_data = get_data()
+subbasin_data, scenarios = get_data()
 
 shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
 png_path = 'C:\\code\\maplot pngs\\'
@@ -169,8 +176,18 @@ subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_
 subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
 subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
 
+lons = subbasin_data_lons
+lons[11]=subbasin_data_lons[11]+0.2
+lons.append(-123.8)
+lats = subbasin_data_lats
+lats.append(43.9)
+
+figsize=[(0.6,0.6) for i in range(11)]
+figsize.append((1.1,0.6))
+figsize_leg = (0.6,0.6)
+
 #plots_to_plot = range(4,5)
-plots_to_plot = [4]
+plots_to_plot = [7]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -204,8 +221,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'spQ.png'     
-        textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, get_metadata(), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -258,8 +274,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'drought_days.png'        
-        textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, get_metadata(), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -302,8 +317,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_ann_precip.png'        
-        textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, get_metadata(), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -346,8 +360,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_winter_Temp.png'        
-        textstr = get_metadata()
-        plt.text(0., 0, textstr, fontsize=3,
+        plt.text(0., 0, get_metadata(), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -390,28 +403,18 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.5
 
-        figsize=[(0.6,0.6) for i in range(11)]
-        figsize.append((1.1,0.6))
         redblue = ['red','blue']
         num_yrs = len(summer_dr_d_smthd[0])
         write_tinyfigs(summer_dr_d_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        figsize_leg = (0.6,0.6)
         ylabel = r'$\Delta \, Drought\,$ [days]'
         xlabel = 'Red = Drier'
         write_legend(summer_dr_d_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
-        
-        
+               
         title = "Change in Summer Hydrologic Drought"
-        lons = subbasin_data_lons
-        lons[11]=subbasin_data_lons[11]+0.2
-        lons.append(-123.8)
-        lats = subbasin_data_lats
-        lats.append(43.9)
         file_graphics = 'change_in_drought_days_wGrphs.png'
-        textstr = get_metadata()
 
-        write_map(title, lons, lats, file_graphics, textstr, shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
 
 
 
@@ -448,27 +451,18 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
 
-        figsize=[(0.6,0.6) for i in range(11)]
-        figsize.append((1.1,0.6))
         redblue = ['red','blue']
         num_yrs = len(winter_temps_smthd[0])
         write_tinyfigs(winter_temps_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        figsize_leg = (0.6,0.6)
         ylabel = r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]'
         xlabel = 'Red = Warmer'
         write_legend(winter_temps_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
         
         title = "Change in Winter Temperatures (Nov - Mar)"
-        lons = subbasin_data_lons
-        lons[11]=subbasin_data_lons[11]+0.2
-        lons.append(-123.8)
-        lats = subbasin_data_lats
-        lats.append(43.9)
         file_graphics = 'change_in_winter_temp_wGrphs.png'
-        textstr = get_metadata()
 
-        write_map(title, lons, lats, file_graphics, textstr, shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
 
 
 
@@ -497,28 +491,19 @@ for plot_num in plots_to_plot:
                 xctr = 0.75
                 yctr = 0.7
                 
-            figsize=[(0.6,0.6) for i in range(11)]
- #           figsize.append((1.1,0.6))
             redblue = ['red','blue']
             num_yrs = len(data1[0])
             write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
             
-            figsize_leg = (0.6,0.6)
             ylabel = r'$\Delta \, value\,$'
             xlabel = ' '
             write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
             
-            lons = subbasin_data_lons
-            lons[11]=subbasin_data_lons[11]+0.2
-            lons.append(-123.8)
-            lats = subbasin_data_lats
-            lats.append(43.9)
             file_graphics = png_file_nm        
-            textstr = get_metadata()
     
             graphs = range(11)
             graphs.append(12)
-            write_map(title, lons, lats, file_graphics, textstr, shp, graphs=graphs)
+            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
             
 #            assert False
             
@@ -526,8 +511,66 @@ for plot_num in plots_to_plot:
             
             
             
-############  Center of Timing w mini figs ############    
+############  Econ w mini figs normalized by land area ############    
     elif plot_num == 7:
+        plt.close()
+        run_names = [\
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')\
+        ]
+        
+        for key in scenarios:
+            
+            for files in run_names:
+                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                print files_scen
+                title = files_scen[0][:-4]
+                file_nm_num = data_path + files_scen[0]
+                file_nm_denom = data_path + files_scen[1]
+                file_nmWB = file_nm_num     
+                png_file_nm = title+'_divided_by_area'+'.png'
+                data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
+                data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
+                data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
+                data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
+                data1_num.append(data_v[2:,1])
+                data1_denom.append(data_v[2:,1])
+                data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
+                data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
+                maxd = np.max(np.array([np.max(data1[i]) for i in range(11)]))
+                mind = np.min(np.array([np.min(data1[i]) for i in range(11)]))
+                if maxd >= abs(mind):
+                    xctr = 0.75
+                    yctr = 0.5
+                else:
+                    xctr = 0.75
+                    yctr = 0.7
+                    
+                redblue = ['red','blue']
+                num_yrs = len(data1[0])
+                write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
+                
+                ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
+                xlabel = ' '
+                write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+                
+                file_graphics = png_file_nm        
+        
+                graphs = range(11)
+                graphs.append(12)
+                write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+                
+#                assert False
+            
+            
+            
+            
+            ############  Center of Timing w mini figs ############    
+    elif plot_num == 8:
         file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
        
         plt.close()
@@ -559,33 +602,24 @@ for plot_num in plots_to_plot:
         print 'Min timing advance = ','\t',mind
         delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
 
-        figsize=[(0.6,0.6) for i in range(11)]
-        figsize.append((1.1,0.6))
         redblue = ['red','blue']
         num_yrs = len(delta_discharge_timing[0])
         write_tinyfigs(delta_discharge_timing,figsize,mind,maxd,redblue, num_yrs)
         
-        figsize_leg = (0.6,0.6)
         ylabel = r'$\Delta \, CT\,$ [days]'
         xlabel = 'Red = Earlier'
         write_legend(delta_discharge_timing[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
             
         title = "Change in Timing of Discharge (CT)"
-        lons = subbasin_data_lons
-        lons[11]=subbasin_data_lons[11]+0.2
-        lons.append(-123.8)
-        lats = subbasin_data_lats
-        lats.append(43.9)
         file_graphics = 'change_in_discharge_timing_wGrphs.png'        
-        textstr = get_metadata()
 
-        write_map(title, lons, lats, file_graphics, textstr, shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
 
 
 
 
 ############  Max SWE w mini figs ############    
-    elif plot_num == 8:
+    elif plot_num == 9:
         file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
         file_nmWB = data_path + 'Snow_(mm)_Ref_Run0.csv'
        
@@ -615,25 +649,16 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
         
-        figsize=[(0.6,0.6) for i in range(11)]
-        figsize.append((1.1,0.6))
         redblue = ['blue','red']
         num_yrs = len(SWE_smthd[0])
         write_tinyfigs(SWE_smthd,figsize,mind,maxd,redblue, num_yrs)
         
-        figsize_leg = (0.6,0.6)
         ylabel = r'$\Delta \, SWE\,$ [cm]'
         xlabel = 'Red = Less SWE'
         write_legend(SWE_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
         
         title = "Change in Basin-Averaged Max SWE"
-        lons = subbasin_data_lons
-        lons[11]=subbasin_data_lons[11]+0.2
-        lons.append(-123.8)
-        lats = subbasin_data_lats
-        lats.append(43.9)
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
-        textstr = get_metadata()
 
-        write_map(title, lons, lats, file_graphics, textstr, shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
         
