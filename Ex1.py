@@ -324,7 +324,8 @@ def get_metadata():
               '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
     return textstr
     
-def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs):
+def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs,\
+                facecolor='0.8',linewidth = 1.):
     """Write tiny figs to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -365,7 +366,8 @@ def colorline(x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0,
         
      
         
-def write_tinyfigs2(datalist,figsize,mind,maxd,redblue, num_yrs):
+def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,\
+                facecolor='0.8',linewidth = 1.):
     """Write tiny figs to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -381,7 +383,8 @@ def write_tinyfigs2(datalist,figsize,mind,maxd,redblue, num_yrs):
         plt.figure(figsize = figsize[i])
         plt.axis('off')
         plt.ylim( (mind,maxd) )
-        x,y = interp(range(89), datalist[i], 0.,float(num_yrs-1),3*num_yrs)
+        x,y = interp(range(num_yrs), datalist[i], 0.,float(num_yrs-1),3*num_yrs)
+        plt.fill_between(range(num_yrs),upper[i], lower[i], facecolor='0.6',lw=0,alpha=1.)
         lc = colorline(x, y, z=y, cmap=cmap, norm=norm, linewidth=1.5,maxd=maxd,mind=mind)
         plt.gca().add_collection(lc)
         plt.xlim(0,num_yrs)
@@ -391,7 +394,8 @@ def write_tinyfigs2(datalist,figsize,mind,maxd,redblue, num_yrs):
     return
 
 
-def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
+def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,\
+                facecolor='0.8',linewidth = 1.):
     """Write tiny legend to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -418,7 +422,8 @@ def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
 
     return
     
-def write_legend2(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
+def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,\
+                facecolor='0.8',linewidth = 1.):
     """Write tiny legend to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -440,7 +445,8 @@ def write_legend2(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel):
         
     norm = BoundaryNorm([-1e-3, 0, 1.e-3], cmap.N)  # cmap.N is number of items in the colormap
     x,y = interp(range(num_yrs), data, 0., float(num_yrs-1), 3*num_yrs)
-    lc = colorline(x, y, z=y, cmap=cmap, norm=norm, linewidth=1.5,maxd=maxd,mind=mind)
+    plt.fill_between(range(num_yrs),upper, lower, facecolor='0.6',lw=0,alpha=1.)
+    lc = colorline(x, y, z=y, cmap=cmap, norm=norm, linewidth=linewidth,maxd=maxd,mind=mind)
     plt.gca().add_collection(lc)
     font = {'size':'6'}           
     mpl.rc('font', **font)
@@ -465,7 +471,8 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
     
     WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                 urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-    im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+    im = plt.imread('C:\\code\\maplot\\ElevationMap_lt.png')
     WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
     WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
     
@@ -518,7 +525,7 @@ figsize.append((1.1,0.6))
 figsize_leg = (0.6,0.6)
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [4]
+plots_to_plot = [8]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -700,10 +707,11 @@ for plot_num in plots_to_plot:
 
 
 
-############  Summer Hydrologic Drought w mini figs/LINES ############    
+############  Summer Hydrologic Drought w mini figs/LINES & SHADING ############    
     elif plot_num == 4:
         plt.close()
         
+        # Calculate Baseline
         file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'       
         data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
@@ -722,54 +730,73 @@ for plot_num in plots_to_plot:
         
         data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
         Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
-        data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
+        data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
         
         summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
         baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
         
+        # Calculate baseline-subtracted value
         window = binomial_window(15)
         summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)]
-#        summer_dr_d_smthd = sample_data()
         
-        maxd = np.max(np.array([np.max(summer_dr_d_smthd[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(summer_dr_d_smthd[i]) for i in range(12)]))
+        data_to_stack = []
+        for key in scenarios:
+            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)])  
+        
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i],1) for i in range(12)]
+        lower = [np.min(data_stacked[i],1) for i in range(12)]
+        
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
         xctr = 0.5
         yctr = 0.5
         
         redblue = ['red','blue']
         num_yrs = len(summer_dr_d_smthd[0])
-        write_tinyfigs2(summer_dr_d_smthd,figsize,mind,maxd,redblue, num_yrs)
+        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
         
         ylabel = r'$\Delta \, Drought\,$ [days]'
         xlabel = 'Red = Drier'
-        write_legend2(summer_dr_d_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+        write_legend2(summer_dr_d_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
                
         title = "Change in Summer Hydrologic Drought"
         file_graphics = 'change_in_drought_days_wGrphs.png'
 
         write_map(title, lons, lats, file_graphics, get_metadata(), shp)
 
-        assert False
 
 
 ############  Winter Temperature w mini figs ############    
     elif plot_num == 5:
+        plt.close()
         file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
         file_nmWB = data_path + 'Climate_Ref_Run0.csv'
        
-        plt.close()
-        data1=[mfx(file_nm, column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+        # Calculate Baseline
+        data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
         data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd1 = data1
-        data_winter = [data_hd1[i][:,31:182] for i in range(12)]
+        data_winter = [data_hd1[i][:,29:182] for i in range(12)]
         winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
                    for i in range(11)]
         data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd2 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i]+1, skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
                    for i in range(11)]
         data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd3 = data1
@@ -779,18 +806,38 @@ for plot_num in plots_to_plot:
                 
         window = binomial_window(15)
         winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i])[8:83] for i in range(12)]
-        maxd = np.max(np.array([np.max(winter_temps_smthd[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(winter_temps_smthd[i]) for i in range(12)]))
+        
+        data_to_stack = []
+        for key in scenarios:
+            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+            data_hd1.append(mfx(file_nmWB.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+            data_winter = [data_hd1[i][:,29:182] for i in range(12)]
+            winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
+            winter_temps_smthd1 = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i])[8:83] for i in range(12)]
+            data_to_stack.append([winter_temps_smthd1[i] for i in range(12)])  
+                
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i],1) for i in range(12)]
+        lower = [np.min(data_stacked[i],1) for i in range(12)]
+        
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
         xctr = 0.5
-        yctr = 0.75
+        yctr = 0.5
 
         redblue = ['red','blue']
         num_yrs = len(winter_temps_smthd[0])
-        write_tinyfigs(winter_temps_smthd,figsize,mind,maxd,redblue, num_yrs)
+        write_tinyfigs2(winter_temps_smthd,upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
         
         ylabel = r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]'
         xlabel = 'Red = Warmer'
-        write_legend(winter_temps_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+        write_legend2(winter_temps_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
         
         title = "Change in Winter Temperatures (Nov - Mar)"
         file_graphics = 'change_in_winter_temp_wGrphs.png'
@@ -902,11 +949,81 @@ for plot_num in plots_to_plot:
             
             
             
+############  Econ w mini figs normalized by land area ############    
+    elif plot_num == 70:
+        plt.close()
+        run_names = [\
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),\
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')\
+        ]
+        
+            
+        for files in run_names:
+            data_to_stack = []
+            title = files[0][:-13]
+            print title
+            for key in scenarios:
+                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                file_nm_num = data_path + files_scen[0]
+                file_nm_denom = data_path + files_scen[1]
+                file_nmWB = file_nm_num     
+                png_file_nm = title+'_divided_by_area'+'.png'
+                data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
+                data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
+                data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
+                data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
+#                data1_num.append(data_v_num)
+#                data1_denom.append(data_v_denom)
+                data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
+                data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
+                data_to_stack.append([data1[i] for i in range(11)])  
+                
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+            
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
+            upper = [np.max(data_stacked[i],1) for i in range(11)]
+            lower = [np.min(data_stacked[i],1) for i in range(11)]
+            
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+            if maxd >= abs(mind):
+                xctr = 0.75
+                yctr = 0.5
+            else:
+                xctr = 0.75
+                yctr = 0.7
+                
+            redblue = ['red','blue']
+            num_yrs = len(data1[0])
+            write_tinyfigs2(data1,upper, lower, figsize, mind,maxd,redblue, 
+                            num_yrs, facecolor='0.6', linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
+            xlabel = ' '
+            write_legend2(data1[4],upper[4], lower[4], figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5)
+            
+            file_graphics = png_file_nm        
+    
+            graphs = range(11)
+            graphs.append(12)
+            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+            
+            
+            
+            
 ############  Center of Timing w mini figs ############    
     elif plot_num == 8:
         file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
        
         plt.close()
+        
+        # Calculate Baseline
         data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd1 = data1
@@ -929,28 +1046,45 @@ for plot_num in plots_to_plot:
         
         window = binomial_window(15)
         delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata_hd1[i],window), baseline[i]) for i in range(12)]
-        maxd = np.max(np.array([np.max(delta_discharge_timing[i][8:83]) for i in range(12)]))
-        mind = np.min(np.array([np.min(delta_discharge_timing[i][8:83]) for i in range(12)]))
-        print 'Max timing advance = ','\t',maxd
-        print 'Min timing advance = ','\t',mind
+        
+        data_to_stack = []
+        for key in scenarios:
+            data1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+            data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+            ctdata = [np.array(ct(data1[i])) for i in range(12)]
+            delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata[i],window), baseline[i]) for i in range(12)]
+            data_to_stack.append([delta_discharge_timing[i] for i in range(12)])  
+
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
+        lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+            
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
         delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
 
         redblue = ['red','blue']
         num_yrs = len(delta_discharge_timing[0])
-        write_tinyfigs(delta_discharge_timing,figsize,mind,maxd,redblue, num_yrs)
+        write_tinyfigs2(delta_discharge_timing, upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
         
         ylabel = r'$\Delta \, CT\,$ [days]'
         xlabel = 'Red = Earlier'
-        write_legend(delta_discharge_timing[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+        write_legend2(delta_discharge_timing[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
             
         title = "Change in Timing of Discharge (CT)"
         file_graphics = 'change_in_discharge_timing_wGrphs.png'        
 
         write_map(title, lons, lats, file_graphics, get_metadata(), shp)
-
-
-
-
+            
+            
+            
+            
 ############  Max SWE w mini figs ############    
     elif plot_num == 9:
         file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
