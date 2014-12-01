@@ -286,7 +286,8 @@ def get_data():
             'LowClim':                  '_LowClim_Run0',\
             'HighPop':                  '_HighPop_Run0',\
             'UrbExpand':                '_UrbExpand_Run0',\
-            'FireSuppress':             '_FireSuppress_Run0'\
+            'FireSuppress':             '_FireSuppress_Run0',\
+            'FullCostUrb':              '_FullCostUrb_Run0'
             }
 
     return data, scenarios
@@ -525,7 +526,7 @@ figsize.append((1.1,0.6))
 figsize_leg = (0.6,0.6)
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [90]
+plots_to_plot = [4,5,70,8,9]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
