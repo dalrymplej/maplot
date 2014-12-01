@@ -525,7 +525,7 @@ figsize.append((1.1,0.6))
 figsize_leg = (0.6,0.6)
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [8]
+plots_to_plot = [90]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -1087,10 +1087,12 @@ for plot_num in plots_to_plot:
             
 ############  Max SWE w mini figs ############    
     elif plot_num == 9:
+        plt.close()
+        
+        # Calculate Baseline
         file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
         file_nmWB = data_path + 'Snow_(mm)_Ref_Run0.csv'
        
-        plt.close()
         data1=[mfx(file_nm, column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
         data1.append(mfx(file_nmWB, column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
@@ -1108,24 +1110,45 @@ for plot_num in plots_to_plot:
         SWE_avg = [(SWE1[i]+SWE2[i]+SWE3[i])/3. for i in range(12)]
         baseline = [np.mean(SWE_avg[i][0:10]) for i in range(12)]  #1's are drought
                 
+        # Calculate baseline-subtracted value
         window = binomial_window(15)
         SWE_smthd = [np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)]
-        maxd = np.max(np.array([np.max(SWE_smthd[i][8:83]) for i in range(12)]))
-        mind = np.min(np.array([np.min(SWE_smthd[i][8:83]) for i in range(12)]))
+        
+        data_to_stack = []
+        for key in scenarios:
+            data1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_snow_col[i], 
+                       skip=cst.day_of_year_oct1) for i in range(11)]
+            data1.append(mfx(file_nmWB.replace('_Ref_Run0',scenarios[key]), 
+                             column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+            SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+            data_to_stack.append([np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)])  
+
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
+        lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+            
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
         SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
         xctr = 0.5
         yctr = 0.75
         
         redblue = ['blue','red']
         num_yrs = len(SWE_smthd[0])
-        write_tinyfigs(SWE_smthd,figsize,mind,maxd,redblue, num_yrs)
+        write_tinyfigs2(SWE_smthd, upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
         
         ylabel = r'$\Delta \, SWE\,$ [cm]'
         xlabel = 'Red = Less SWE'
-        write_legend(SWE_smthd[0],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+        write_legend2(SWE_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
+               
         
         title = "Change in Basin-Averaged Max SWE"
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
 
         write_map(title, lons, lats, file_graphics, get_metadata(), shp)
-        
+       
