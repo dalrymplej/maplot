@@ -266,27 +266,27 @@ def sample_data():
     
 def get_data():
     """ Returns tuple of data"""
-    data= {\
-            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1), \
-            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10),\
-            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21, 11),\
-            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3, 2),\
-            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5, 3),\
-            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7, 4),\
-            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5),\
-            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6),\
-            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7),\
-            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8),\
-            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),\
-            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)\
+    data= {
+            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1), 
+            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10),
+            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21, 11),
+            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3, 2),
+            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5, 3),
+            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7, 4),
+            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5),
+            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6),
+            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7),
+            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8),
+            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),
+            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)
             }
-    scenarios = {\
-            'Reference':                '_Ref_Run0',\
-            'HighClim':                 '_HighClim_Run0',\
-            'LowClim':                  '_LowClim_Run0',\
-            'HighPop':                  '_HighPop_Run0',\
-            'UrbExpand':                '_UrbExpand_Run0',\
-            'FireSuppress':             '_FireSuppress_Run0',\
+    scenarios = {
+            'Reference':                '_Ref_Run0',
+            'HighClim':                 '_HighClim_Run0',
+            'LowClim':                  '_LowClim_Run0',
+            'HighPop':                  '_HighPop_Run0',
+            'UrbExpand':                '_UrbExpand_Run0',
+            'FireSuppress':             '_FireSuppress_Run0',
             'FullCostUrb':              '_FullCostUrb_Run0'
             }
 
@@ -319,13 +319,14 @@ def get_metadata():
     """Add metadata to plot
     """
     import time as timetool, os.path
-    textstr = 'Willamette Water 2100' + \
-              '\n' + '  Graph generated on ' + str(datetime.date.today()) +\
+    textstr = ('Willamette Water 2100' + 
+              '\n' + '  Graph generated on ' + str(datetime.date.today()) +
               '\n' + '  File: ' + file_nm +\
-              '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))        
+              '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))
+              )
     return textstr
     
-def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs,\
+def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs,
                 facecolor='0.8',linewidth = 1.):
     """Write tiny figs to be plotted on map
     """
@@ -367,7 +368,7 @@ def colorline(x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0,
         
      
         
-def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,\
+def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,
                 facecolor='0.8',linewidth = 1.):
     """Write tiny figs to be plotted on map
     """
@@ -395,7 +396,7 @@ def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,\
     return
 
 
-def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,\
+def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
                 facecolor='0.8',linewidth = 1.):
     """Write tiny legend to be plotted on map
     """
@@ -423,7 +424,7 @@ def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,\
 
     return
     
-def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,\
+def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
                 facecolor='0.8',linewidth = 1.):
     """Write tiny legend to be plotted on map
     """
@@ -602,8 +603,8 @@ for plot_num in plots_to_plot:
         data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
         
         diff_drought_days = [
-                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') \
-                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') \
+                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') 
+                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') 
                     for i in range(12)]  #+ve numbers are increasing drought
        
         colord = np.array(diff_drought_days)
@@ -642,8 +643,8 @@ for plot_num in plots_to_plot:
         data_hd1 = data1
         
         diff_ann_precip = [
-                    + nrc(data_hd1[i],[0,0],[19,364], oper='avg') \
-                    - nrc(data_hd1[i],[69, 0],[88,364], oper='avg') \
+                    + nrc(data_hd1[i],[0,0],[19,364], oper='avg') 
+                    - nrc(data_hd1[i],[69, 0],[88,364], oper='avg') 
                     for i in range(12)]  # +ve numbers are decreasing precip
         print nrc(data_hd1[0],[0,0],[19,364], oper='avg')
         print nrc(data_hd1[0],[69, 0],[88,364], oper='avg')
@@ -685,8 +686,8 @@ for plot_num in plots_to_plot:
         data_hd1 = data1
         
         diff_winter_temp = [
-                      nrc(data_hd1[i],[69,31],[88,182], oper='avg') \
-                    - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') \
+                      nrc(data_hd1[i],[69,31],[88,182], oper='avg') 
+                    - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') 
                     for i in range(12)]  #+ve numbers are increasing temp
         print 'early cent', '\t',nrc(data_hd1[i],[69,31],[88,182], oper='avg')
         print 'late cent', '\t',nrc(data_hd1[i],[0, 31],[19,182], oper='avg')
@@ -895,13 +896,13 @@ for plot_num in plots_to_plot:
 ############  Econ w mini figs normalized by land area ############    
     elif plot_num == 7:
         plt.close()
-        run_names = [\
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')\
+        run_names = [
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
         ]
         
         for key in scenarios:
@@ -953,13 +954,13 @@ for plot_num in plots_to_plot:
 ############  Econ w mini figs normalized by land area ############    
     elif plot_num == 70:
         plt.close()
-        run_names = [\
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),\
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')\
+        run_names = [
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
         ]
         
             
