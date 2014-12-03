@@ -527,7 +527,7 @@ figsize.append((1.1,0.6))
 figsize_leg = (0.6,0.6)
 
 #plots_to_plot = range(4,5)
-plots_to_plot = [4,5,70,8,9]
+plots_to_plot = [60]
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
@@ -887,6 +887,79 @@ for plot_num in plots_to_plot:
             graphs.append(12)
             write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
             
+#            assert False
+            
+            
+            
+            
+            
+############  Econ w mini figs w lines & shading ############    
+    elif plot_num == 60:
+        plt.close()
+        file_types = ['subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv', 
+                      'subbasin_tot_ac_of_developed_land_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ac_of_forest_land_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ag_land_values_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ag_land_values_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_ag_land_values_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_dev_land_values_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_forest_land_values_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                      ]
+        
+        for subfiletype in file_types:
+            econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]            
+            econ_files = getfilenames(data_path,'subbasin')
+
+            file_nm = data_path + subfiletype
+            data_to_stack = []
+            title = file_nm.partition(data_path)[2][:-13]
+            png_file_nm = title+'.png'
+            for key in scenarios:
+                data_v = np.array(np.genfromtxt(file_nm.replace('_Ref_Run0',scenarios[key]), delimiter=',',skip_header=1))
+                data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
+                data1.append(data_v[2:,1])
+                baseline = [data1[i][0] for i in range(11)]
+                data1 = [np.subtract(data1[i],baseline[i]) for i in range(11)]
+                data_to_stack.append([data1[i] for i in range(11)])  
+           
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
+            upper = [np.max(data_stacked[i],1) for i in range(11)]
+            lower = [np.min(data_stacked[i],1) for i in range(11)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+            if maxd >= abs(mind):
+                xctr = 0.75
+                yctr = 0.5
+            else:
+                xctr = 0.75
+                yctr = 0.7
+            redblue = ['red','blue']
+            num_yrs = len(data1[0])
+            write_tinyfigs2(data1, upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, value\,$'
+            xlabel = ' '
+            write_legend2(data1[4], upper[4], lower[4],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5)
+            
+            file_graphics = png_file_nm        
+    
+            graphs = range(11)
+            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+                
 #            assert False
             
             
