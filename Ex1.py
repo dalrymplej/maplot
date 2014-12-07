@@ -266,6 +266,7 @@ def sample_data():
     
 def get_data():
     """ Returns tuple of data"""
+    ##                                  Long (mth)  Lat (mth)  Col     Area       Long (mth)   Lat (mth) Col Col
     data= {
             'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1), 
             'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10),
