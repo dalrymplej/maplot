@@ -281,6 +281,7 @@ def get_data():
             'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),
             'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)
             }
+            
     scenarios = {
             'Reference':                '_Ref_Run0',
             'HighClim':                 '_HighClim_Run0',
@@ -293,6 +294,21 @@ def get_data():
 
     return data, scenarios
 
+def get_EFdata():
+    """ Returns tuple of data"""
+    EFdata= {
+            'Salem':                    (-123.038507, 44.941741, 1), 
+            'Hills Creek':              (-122.423156, 43.676881, 1),
+            'Fall Creek':               (-122.739280, 43.951271, 1),
+            'Dexter':                   (-122.787811, 43.913641, 1),
+            'Big Cliff':                (-122.266989, 44.732960, 1),
+            'Foster':                   (-122.641251, 44.414983, 1),
+            'Blue River':               (-122.279801, 44.182290, 1),
+            'Cougar':                   (-122.231298, 44.107187, 1)
+            }
+            
+    return EFdata
+    
 def getfilenames(data_path, searchword):
     import glob
     files = glob.glob(data_path + '/*.csv')
