@@ -297,14 +297,14 @@ def get_data():
 def get_EFdata():
     """ Returns tuple of data"""
     EFdata= {
-            'Salem':                    (-123.038507, 44.941741, 1), 
-            'Hills Creek':              (-122.423156, 43.676881, 1),
-            'Fall Creek':               (-122.739280, 43.951271, 1),
-            'Dexter':                   (-122.787811, 43.913641, 1),
-            'Big Cliff':                (-122.266989, 44.732960, 1),
-            'Foster':                   (-122.641251, 44.414983, 1),
-            'Blue River':               (-122.279801, 44.182290, 1),
-            'Cougar':                   (-122.231298, 44.107187, 1)
+            'Salem':                    (-123.038507, 44.941741, 1, 1), 
+            'Hills Creek':              (-122.423156, 43.676881, 2, 1),
+            'Fall Creek':               (-122.739280, 43.951271, 3, 1),
+            'Dexter':                   (-122.787811, 43.913641, 4, 1),
+            'Big Cliff':                (-122.266989, 44.732960, 5, 1),
+            'Foster':                   (-122.641251, 44.414983, 6, 1),
+            'Blue River':               (-122.279801, 44.182290, 7, 1),
+            'Cougar':                   (-122.231298, 44.107187, 8, 1)
             }
             
     return EFdata
@@ -515,36 +515,56 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
 ###############################################################################
 ###############################################################################
 
+# Map boundaries
 lat_bounds = 43.31342817420548, 45.84870876153576
 long_bounds = -121.401130054521,-124.151784119791
-
-subbasin_data, scenarios = get_data()
 
 shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
 png_path = 'C:\\code\\maplot pngs\\'
 data_path = 'C:\\code\\maplot data\\'
 
-subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
-subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
-subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
-subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
-subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
-subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
-subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
-subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
-
-lons = subbasin_data_lons
-lons[11]=subbasin_data_lons[11]+0.2
-lons.append(-123.8)
-lats = subbasin_data_lats
-lats.append(43.9)
-
 figsize=[(0.6,0.6) for i in range(11)]
 figsize.append((1.1,0.6))
 figsize_leg = (0.6,0.6)
 
-#plots_to_plot = range(4,5)
-plots_to_plot = [60]
+subbasins_loop = False
+reservoirs_loop = True
+
+if subbasins_loop:
+    subbasin_data, scenarios = get_data()
+    
+    subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
+    subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
+    subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
+    subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
+    subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
+    subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
+    subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
+    subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
+    
+    lons = subbasin_data_lons
+    lons[11]=subbasin_data_lons[11]+0.2
+    lons.append(-123.8)
+    lats = subbasin_data_lats
+    lats.append(43.9)
+
+    #plots_to_plot = range(4,5)
+    plots_to_plot = [60]
+    
+if reservoirs_loop:
+    EFdata = get_EFdata()
+    plots_to_plot = [101]
+    res_data_list = [EFdata[key] for key in EFdata]
+    res_data_list = sorted(res_data_list, key=lambda x: x[2])  # order list by number
+    res_data_lons = [res_data_list[i][0] for i in range(len(res_data_list))]
+    res_data_lats = [res_data_list[i][1] for i in range(len(res_data_list))]
+    res_data_order = [res_data_list[i][2] for i in range(len(res_data_list))]
+    res_data_EF_col = [res_data_list[i][3] for i in range(len(res_data_list))]
+    
+    EFlons = res_data_lons
+    EFlats = res_data_lats
+   
+
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
     
