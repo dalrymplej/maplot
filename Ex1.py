@@ -17,7 +17,162 @@ from Rectangle import np_rec_calc as nrc
 from compare import compare_rows
 import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-from movingaverage import movingaverage, binomial_window
+from movingaverage import movingaverage, binomial_window,movingaverage_2D
+import math
+
+
+def get_EFdata():
+    """ Returns tuple of data"""
+    EFdata= {
+            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
+            'Hills Creek':              (-122.35, 43.7, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
+            }
+#            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
+#            'Hills Creek':              (-122.423156, 43.676881, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+#            'Fall Creek':               (-122.739280, 43.951271, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+#            'Dexter':                   (-122.787811, 43.913641, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+#            'Big Cliff':                (-122.266989, 44.732960, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+#            'Foster':                   (-122.641251, 44.414983, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+#            'Blue River':               (-122.279801, 44.182290, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+#            'Cougar':                   (-122.231298, 44.107187, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
+#    
+            
+    return EFdata
+    
+    
+def get_EFrules():
+    """ Write rules for each location
+    """
+    shft = 365 - cst.day_of_year_oct1
+    shftB = cst.day_of_year_oct1
+                                   ##      rule_type    start_day             end_day              discharge            pct_time_met  weight
+    EFrules = {
+            'Salem':              (1, (['minQ7day', cst.day_of_year_apr1 + shft,  cst.day_of_year_apr30 + shft,  17800.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ7day', cst.day_of_year_may1 + shft,  cst.day_of_year_may31 + shft,  15000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ7day', cst.day_of_year_jun1 + shft,  cst.day_of_year_jun15 + shft,  13000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ7day', cst.day_of_year_jun16 + shft, cst.day_of_year_jun30 + shft,   8000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_apr1 + shft,  cst.day_of_year_apr30 + shft,  14300.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_may1 + shft,  cst.day_of_year_may31 + shft,  12000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_jun1 + shft,  cst.day_of_year_jun15 + shft,  10500.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_jun16 + shft, cst.day_of_year_jun30 + shft,   7000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_jul1 + shft,  cst.day_of_year_jul31 + shft,   6000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_aug1 + shft,  cst.day_of_year_aug15 + shft,   6000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_aug16 + shft, cst.day_of_year_aug31 + shft,   6500.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   7000.*cst.cfs_to_m3,    100.,    1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct31 - shftB,  7000.*cst.cfs_to_m3,    100.,    1.]
+                                         )), 
+                                         
+            'Hills Creek':        (2, (
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,    400.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_jan31 + shft,    400.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_feb1 + shft,  cst.day_of_year_aug31 + shft,    400.*cst.cfs_to_m3,    99.9,    1.]
+                                        )),
+                                        
+            'Fall Creek':         (3, ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,    200.*cst.cfs_to_m3,    95.,     1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,   200.*cst.cfs_to_m3,    95.,     1.],
+                                         ['maxQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,    400.*cst.cfs_to_m3,    25.,     1.],
+                                         ['maxQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,   400.*cst.cfs_to_m3,    25.,     1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_mar31 + shft,     50.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_apr1 + shft,  cst.day_of_year_jun30 + shft,     80.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_jul1 + shft,  cst.day_of_year_aug31 + shft,     80.*cst.cfs_to_m3,    95.,     1.]
+                                        )),
+                                        
+            'Dexter':             (4, ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   1200.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  1200.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['maxQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   3500.*cst.cfs_to_m3,    25.,     1.],
+                                         ['maxQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  3500.*cst.cfs_to_m3,    25.,     1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_aug31 + shft,   1200.*cst.cfs_to_m3,    99.9,    1.]
+                                        )),
+                                        
+            'Big Cliff':          (5, ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   1500.*cst.cfs_to_m3,    95.,     1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  1500.*cst.cfs_to_m3,    95.,     1.],
+                                         ['maxQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   3000.*cst.cfs_to_m3,     5.,     1.],
+                                         ['maxQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  3000.*cst.cfs_to_m3,     5.,     1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_jan31 + shft,   1200.*cst.cfs_to_m3,    98.,     1.],
+                                         ['minQ',     cst.day_of_year_feb1 + shft,  cst.day_of_year_mar15 + shft,   1000.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_mar16 + shft, cst.day_of_year_may31 + shft,   1500.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['maxQ',     cst.day_of_year_mar16 + shft, cst.day_of_year_may31 + shft,   3000.*cst.cfs_to_m3,    25.,     1.],
+                                         ['minQ',     cst.day_of_year_jun1 + shft,  cst.day_of_year_jul15 + shft,   1200.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_jul16 + shft, cst.day_of_year_aug31 + shft,   1000.*cst.cfs_to_m3,    99.9,    1.]
+                                        )),
+                                        
+            'Foster':             (6, ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   1500.*cst.cfs_to_m3,    75.,     1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  1500.*cst.cfs_to_m3,    75.,     1.],
+                                         ['maxQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,   3000.*cst.cfs_to_m3,     1.,     1.],
+                                         ['maxQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,  3000.*cst.cfs_to_m3,     1.,     1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_jan31 + shft,   1100.*cst.cfs_to_m3,    80.,     1.],
+                                         ['minQ',     cst.day_of_year_feb1 + shft,  cst.day_of_year_mar15 + shft,    800.*cst.cfs_to_m3,    95.,     1.],
+                                         ['minQ',     cst.day_of_year_mar1 + shft,  cst.day_of_year_may15 + shft,   1500.*cst.cfs_to_m3,    80.,     1.],
+                                         ['maxQ',     cst.day_of_year_mar16 + shft, cst.day_of_year_may15 + shft,   3000.*cst.cfs_to_m3,    30.,     1.],
+                                         ['minQ',     cst.day_of_year_may16 + shft, cst.day_of_year_jun30 + shft,   1100.*cst.cfs_to_m3,    95.,     1.],
+                                         ['minQ',     cst.day_of_year_jul1 + shft,  cst.day_of_year_aug31 + shft,    800.*cst.cfs_to_m3,    99.,     1.]
+                                        )),
+                                        
+            'Blue River':        (7,  ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,     50.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,    50.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_aug31 + shft,     50.*cst.cfs_to_m3,    99.9,    1.]
+                                        )),
+                                        
+            'Cougar':            (8,  ( 
+                                         ['minQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,    300.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,   300.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['maxQ',     cst.day_of_year_sep1 + shft,  cst.day_of_year_sep30 + shft,    580.*cst.cfs_to_m3,    60.,     1.],
+                                         ['maxQ',     cst.day_of_year_oct1 - shftB, cst.day_of_year_oct15 - shftB,   580.*cst.cfs_to_m3,    60.,     1.],
+                                         ['minQ',     cst.day_of_year_oct16 - shftB,cst.day_of_year_may31 + shft,    300.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_jun1 + shft,  cst.day_of_year_jun30 + shft,    400.*cst.cfs_to_m3,    99.9,    1.],
+                                         ['minQ',     cst.day_of_year_jul1 + shft,  cst.day_of_year_aug31 + shft,    300.*cst.cfs_to_m3,    99.9,    1.]
+                                        )),
+            }
+    
+
+    return EFrules
+
+def RuleViolations(data, num_yrs, rules):
+    """From data (2D numpy array), calculate and return the number rule 
+    violations in each year.  
+    """
+    assert num_yrs == np.shape(data)[0]
+    num_rules = len(rules)
+    violations = np.zeros(num_yrs)
+    for j in range(num_rules):
+        rule_type = rules[j][0]
+        start_day = rules[j][1]
+        end_day = rules[j][2]
+        discharge = rules[j][3]
+        pct_time_met = rules[j][4]
+        num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  
+        weight = rules[j][5]
+        
+        if rule_type == 'minQ':
+            violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]
+            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
+            np.clip(violations_prelim,0,999999)
+            violations += violations_prelim
+        elif rule_type == 'maxQ':
+            violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]
+            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
+            np.clip(violations_prelim,0,999999)
+            violations += violations_prelim
+        elif rule_type == 'minQ7day':
+            data_7dma = movingaverage_2D(data, 7)
+            violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]
+            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
+            np.clip(violations_prelim,0,999999)
+            violations += violations_prelim
+        else:
+            assert False
+    return violations
 
 def sample_data():
     a = [np.array([-10.35253906,  -9.23364258,  -7.73858643,  -5.3651123 ,
@@ -294,21 +449,7 @@ def get_data():
 
     return data, scenarios
 
-def get_EFdata():
-    """ Returns tuple of data"""
-    EFdata= {
-            'Salem':                    (-123.038507, 44.941741, 1, 1), 
-            'Hills Creek':              (-122.423156, 43.676881, 2, 1),
-            'Fall Creek':               (-122.739280, 43.951271, 3, 1),
-            'Dexter':                   (-122.787811, 43.913641, 4, 1),
-            'Big Cliff':                (-122.266989, 44.732960, 5, 1),
-            'Foster':                   (-122.641251, 44.414983, 6, 1),
-            'Blue River':               (-122.279801, 44.182290, 7, 1),
-            'Cougar':                   (-122.231298, 44.107187, 8, 1)
-            }
-            
-    return EFdata
-    
+
 def getfilenames(data_path, searchword):
     import glob
     files = glob.glob(data_path + '/*.csv')
@@ -332,7 +473,7 @@ def ct(water_yr_array):
     CT = np.divide(m1,m0) + cst.day_of_year_oct1
     return CT
 
-def get_metadata():
+def get_metadata(file_nm):
     """Add metadata to plot
     """
     import time as timetool, os.path
@@ -442,7 +583,7 @@ def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
     return
     
 def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
-                facecolor='0.8',linewidth = 1.):
+                facecolor='0.8',linewidth = 1.,which_legend='subbasins'):
     """Write tiny legend to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -472,7 +613,10 @@ def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xla
     plt.ylabel(ylabel, fontsize=6)
     axleg.text(-30., mind*1.5, xlabel, fontsize=6,
             verticalalignment='top')
-    plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+    if which_legend == 'subbasins':
+        plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+    elif which_legend == 'EFs':
+        plt.savefig('tinyfig'+'8'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
     plt.close()
     mpl.rcdefaults()
 
@@ -530,8 +674,9 @@ figsize_leg = (0.6,0.6)
 subbasins_loop = False
 reservoirs_loop = True
 
+subbasin_data, scenarios = get_data()
+
 if subbasins_loop:
-    subbasin_data, scenarios = get_data()
     
     subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
     subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
@@ -552,17 +697,21 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    EFdata = get_EFdata()
     plots_to_plot = [101]
+
+    EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
     res_data_list = sorted(res_data_list, key=lambda x: x[2])  # order list by number
     res_data_lons = [res_data_list[i][0] for i in range(len(res_data_list))]
     res_data_lats = [res_data_list[i][1] for i in range(len(res_data_list))]
     res_data_order = [res_data_list[i][2] for i in range(len(res_data_list))]
-    res_data_EF_col = [res_data_list[i][3] for i in range(len(res_data_list))]
+    res_data_file = [data_path + res_data_list[i][3] for i in range(len(res_data_list))]
+    res_data_EF_col = [res_data_list[i][4] for i in range(len(res_data_list))]
     
     EFlons = res_data_lons
     EFlats = res_data_lats
+    EFlons.append(-123.8)
+    EFlats.append(43.9)
    
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -598,7 +747,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'spQ.png'     
-        plt.text(0., 0, get_metadata(), fontsize=3,
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -651,7 +800,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'drought_days.png'        
-        plt.text(0., 0, get_metadata(), fontsize=3,
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -694,7 +843,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_ann_precip.png'        
-        plt.text(0., 0, get_metadata(), fontsize=3,
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -737,7 +886,7 @@ for plot_num in plots_to_plot:
         WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
         file_graphics = 'diff_winter_Temp.png'        
-        plt.text(0., 0, get_metadata(), fontsize=3,
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
@@ -813,7 +962,7 @@ for plot_num in plots_to_plot:
         title = "Change in Summer Hydrologic Drought"
         file_graphics = 'change_in_drought_days_wGrphs.png'
 
-        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp)
 
 
 
@@ -881,7 +1030,7 @@ for plot_num in plots_to_plot:
         title = "Change in Winter Temperatures (Nov - Mar)"
         file_graphics = 'change_in_winter_temp_wGrphs.png'
 
-        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp)
 
 
 
@@ -922,7 +1071,7 @@ for plot_num in plots_to_plot:
     
             graphs = range(11)
             graphs.append(12)
-            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
             
 #            assert False
             
@@ -995,7 +1144,7 @@ for plot_num in plots_to_plot:
             file_graphics = png_file_nm        
     
             graphs = range(11)
-            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
                 
 #            assert False
             
@@ -1054,7 +1203,7 @@ for plot_num in plots_to_plot:
         
                 graphs = range(11)
                 graphs.append(12)
-                write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+                write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
                 
 #                assert False
             
@@ -1124,7 +1273,7 @@ for plot_num in plots_to_plot:
     
             graphs = range(11)
             graphs.append(12)
-            write_map(title, lons, lats, file_graphics, get_metadata(), shp, graphs=graphs)
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
             
             
             
@@ -1192,7 +1341,7 @@ for plot_num in plots_to_plot:
         title = "Change in Timing of Discharge (CT)"
         file_graphics = 'change_in_discharge_timing_wGrphs.png'        
 
-        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp)
             
             
             
@@ -1262,5 +1411,75 @@ for plot_num in plots_to_plot:
         title = "Change in Basin-Averaged Max SWE"
         file_graphics = 'change_in_max_SWE_wGrphs.png'        
 
-        write_map(title, lons, lats, file_graphics, get_metadata(), shp)
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp)
+       
+############  BiOp & Env Flows w mini figs ############    
+    elif plot_num == 101:
+        plt.close()
+        num_locs = len(res_data_list)
+        figsize=[(1.1,0.8) for i in range(num_locs)]
+        figsize.append((1.1,0.8))
+        figsize_leg = (1.1,0.8)
+        
+        
+        EFrules = get_EFrules()
+        EF_rules_list = [EFrules[key] for key in EFrules]
+        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+        
+        # Calculate Baseline
+        file_nm = res_data_file
+       
+        data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        num_yrs = np.shape(data1[0])[0]
+        
+        viols1 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols2 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols3 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+             
+        viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
+        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  #1's are drought
+                
+        # Calculate baseline-subtracted value
+        window = binomial_window(15)
+        viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)]
+        
+        data_to_stack = []
+        for key in scenarios:
+            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            viols1 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
+            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
+
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+        xctr = 0.5
+        yctr = 0.75
+        
+        redblue = ['red','blue']
+        num_yrs = len(viols_smthd[0])
+        write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
+        
+        ylabel = r'$\Delta \, EF \,Viols\,$ [days]'
+        xlabel = 'Red = more EF violations'
+        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5, which_legend = 'EFs')
+               
+        
+        title = "Change in Violations of BiOp and Environmental Flows"
+        file_graphics = 'change_in_Biop-EF_violations_wGrphs.png'        
+
+        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
        

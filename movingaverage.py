@@ -40,3 +40,16 @@ def movingaverage_first2D(array_2D, window_size_days, window_size_yrs):
     interval = [np.average(array_2D[0:window_size_yrs,i]) for i in range(365)]
     window = np.ones(int(window_size_days))/float(window_size_days)
     return np.convolve(interval, window, 'same')
+
+def movingaverage_2D(array_2D, window_size_days):
+    """
+    Take a np array and calculate a moving average over a window of 
+    window_size_days, and return a numpy array (dimension 2)
+    """
+    import numpy as np
+    from matrix_from_xls import data_2D
+    data = array_2D.flatten()
+    window = np.ones(int(window_size_days))/float(window_size_days)
+    data = np.convolve(data, window, 'same')
+    return data_2D(data,0,365)
+    
