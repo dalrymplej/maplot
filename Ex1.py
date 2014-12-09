@@ -512,7 +512,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [101]
+    plots_to_plot = [103]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
@@ -1439,8 +1439,8 @@ for plot_num in plots_to_plot:
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
                         linewidth = 1.5)
         
-        ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
-        xlabel = 'Red = less Summer reliability'
+        ylabel = r'$\Delta \,Reliab\,$ [days]'
+        xlabel = 'Red = less Non-Summer reliability'
         write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5, which_legend = 'EFs')
