@@ -1297,7 +1297,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "Change in Reliability of BiOp and Environmental Flows"
+        title = "Reliability of BiOp and Environmental Flows"
         file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
@@ -1373,7 +1373,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "Change in Summer Reliability of BiOp and Env Flows"
+        title = "Summer Reliability of BiOp and Env Flows"
         file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
@@ -1447,7 +1447,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "Change in Non-Summer Reliability of BiOp and Env Flows"
+        title = "Non-Summer Reliability of BiOp and Env Flows"
         file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
