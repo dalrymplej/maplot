@@ -24,14 +24,14 @@ import math
 def get_EFdata():
     """ Returns tuple of data"""
     EFdata= {
-            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
-            'Hills Creek':              (-122.35, 43.7, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
+            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_HighClim_Run0.csv', 1), 
+            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
+            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
+            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_HighClim_Run0.csv', 4),
+            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_HighClim_Run0.csv', 4),
+            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
+            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
+            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4)
             }
 # Lat/long of 8 locations:
 #            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
