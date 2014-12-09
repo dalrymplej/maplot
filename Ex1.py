@@ -162,10 +162,10 @@ def RuleReliability(data, num_yrs, rules, season='none'):
         end_day = rules[j][2]    # End of the rule
         discharge = rules[j][3]  # Discharge for rule
         pct_time_met = rules[j][4] # Percent of time the rule is supposed to be met
-        num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  # Convert % time met to number of rule violations allowed
         weight = rules[j][5]  # Weights for rules.  This is initially set to 1.
         
         if rule_type == 'minQ':
+            num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  # Convert % time met to number of rule violations allowed
             if season == 'none':            
                 violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]
             elif season == 'summer':
@@ -186,6 +186,7 @@ def RuleReliability(data, num_yrs, rules, season='none'):
             violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         elif rule_type == 'maxQ':
+            num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (pct_time_met)/100.)  # Convert % time met to number of rule violations allowed
             if season == 'none':            
                 violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]
             elif season == 'summer':
@@ -206,6 +207,7 @@ def RuleReliability(data, num_yrs, rules, season='none'):
             violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         elif rule_type == 'minQ7day':
+            num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  # Convert % time met to number of rule violations allowed
             data_7dma = movingaverage_2D(data, 7)
             if season == 'none':            
                 violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]
@@ -510,7 +512,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [102,103]
+    plots_to_plot = [101]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
