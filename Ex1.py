@@ -151,9 +151,8 @@ def RuleReliability(data, num_yrs, rules, season='none'):
     
     assert num_yrs == np.shape(data)[0]
     shft = 365 - cst.day_of_year_oct1
-    shftB = cst.day_of_year_oct1
     start_of_summer = cst.day_of_year_jun1 + shft
-    end_of_summer = cst.day_of_year_sep30 + shft
+#    end_of_summer = cst.day_of_year_sep30 + shft
     num_rules = len(rules)
     violations = np.zeros(num_yrs)
     for j in range(num_rules):
@@ -229,7 +228,7 @@ def RuleReliability(data, num_yrs, rules, season='none'):
             violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         else:
-            '---- Rule requested is not in the code ----'
+            print '---- Rule requested is not in the code ----'
             assert False
     
     violations = -1*violations
@@ -1165,6 +1164,8 @@ for plot_num in plots_to_plot:
 ############  Max SWE w mini figs ############    
     elif plot_num == 9:
         plt.close()
+        figsize9=[(figsize[i][0],figsize[i][1]*1.5) for i in range(12)]
+        figsize_leg9=(figsize_leg[0],figsize_leg[1]*1.5) 
         
         # Calculate Baseline
         file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
@@ -1189,7 +1190,7 @@ for plot_num in plots_to_plot:
                 
         # Calculate baseline-subtracted value
         window = binomial_window(15)
-        SWE_smthd = [np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)]
+        SWE_smthd = [10.*np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)]  # plot in mm instead of cm
         
         data_to_stack = []
         for key in scenarios:
@@ -1201,7 +1202,7 @@ for plot_num in plots_to_plot:
             data_to_stack.append([np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)])  
 
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        data_stacked = [10.*np.column_stack(data_to_stack[i]) for i in range(12)] #stack & convert to mm
         upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
         lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
             
@@ -1213,13 +1214,13 @@ for plot_num in plots_to_plot:
         
         redblue = ['blue','red']
         num_yrs = len(SWE_smthd[0])
-        write_tinyfigs2(SWE_smthd, upper, lower, figsize,
+        write_tinyfigs2(SWE_smthd, upper, lower, figsize9,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
                         linewidth = 1.5)
         
-        ylabel = r'$\Delta \, SWE\,$ [cm]'
+        ylabel = r'$\Delta \, SWE\,$ [mm]'
         xlabel = 'Red = Less SWE'
-        write_legend2(SWE_smthd[0], upper[0], lower[0],figsize_leg,
+        write_legend2(SWE_smthd[0], upper[0], lower[0],figsize_leg9,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5)
                
