@@ -33,6 +33,7 @@ def get_EFdata():
             'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
             'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
             }
+# Lat/long of 8 locations:
 #            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
 #            'Hills Creek':              (-122.423156, 43.676881, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
 #            'Fall Creek':               (-122.739280, 43.951271, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
@@ -48,6 +49,8 @@ def get_EFdata():
     
 def get_EFrules():
     """ Write rules for each location
+    For each location, provide rules.
+    Return rules.
     """
     shft = 365 - cst.day_of_year_oct1
     shftB = cst.day_of_year_oct1
@@ -138,40 +141,95 @@ def get_EFrules():
 
     return EFrules
 
-def RuleViolations(data, num_yrs, rules):
-    """From data (2D numpy array), calculate and return the number rule 
-    violations in each year.  
+def RuleReliability(data, num_yrs, rules, season='none'):
+    """From data (2D numpy array), calculate and return the rule 
+    reliability in each year.  
     """
+    # Count the number of days that each rule is violated.  Some fraction 
+    # (pct_time_met) of violations are allowed.  Beyond that, every violation 
+    # counts as 1 * weight.  Violations are summed.
+    
     assert num_yrs == np.shape(data)[0]
+    shft = 365 - cst.day_of_year_oct1
+    shftB = cst.day_of_year_oct1
+    start_of_summer = cst.day_of_year_jun1 + shft
+    end_of_summer = cst.day_of_year_sep30 + shft
     num_rules = len(rules)
     violations = np.zeros(num_yrs)
     for j in range(num_rules):
-        rule_type = rules[j][0]
-        start_day = rules[j][1]
-        end_day = rules[j][2]
-        discharge = rules[j][3]
-        pct_time_met = rules[j][4]
-        num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  
-        weight = rules[j][5]
+        rule_type = rules[j][0]  # Type of rule
+        start_day = rules[j][1]  # Start of the rule
+        end_day = rules[j][2]    # End of the rule
+        discharge = rules[j][3]  # Discharge for rule
+        pct_time_met = rules[j][4] # Percent of time the rule is supposed to be met
+        num_viols_allowed = math.ceil(float(end_day - start_day + 1) * (100. - pct_time_met)/100.)  # Convert % time met to number of rule violations allowed
+        weight = rules[j][5]  # Weights for rules.  This is initially set to 1.
         
         if rule_type == 'minQ':
-            violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]
-            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
-            np.clip(violations_prelim,0,999999)
+            if season == 'none':            
+                violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]
+            elif season == 'summer':
+                if end_day < start_of_summer:
+                   violations_bool = np.zeros_like(data, dtype=bool)  # Array of all false
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data[i,start_of_summer:(end_day+1)] < discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                    violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]                    
+            elif season == 'not_summer':
+                if end_day < start_of_summer:
+                   violations_bool = [data[i,start_day:(end_day+1)] < discharge for i in range(num_yrs)]
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data[i,start_day:(start_of_summer+1)] < discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                    violations_bool = np.zeros_like(data, dtype=bool)                    
+            violations_prelim = [(np.sum(violations_bool[i]) -num_viols_allowed)*weight for i in range(num_yrs)]
+            violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         elif rule_type == 'maxQ':
-            violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]
-            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
-            np.clip(violations_prelim,0,999999)
+            if season == 'none':            
+                violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]
+            elif season == 'summer':
+                if end_day < start_of_summer:
+                   violations_bool = np.zeros_like(data, dtype=bool)
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data[i,start_of_summer:(end_day+1)] > discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                    violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]                    
+            elif season == 'not_summer':
+                if end_day < start_of_summer:
+                    violations_bool = [data[i,start_day:(end_day+1)] > discharge for i in range(num_yrs)]                    
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data[i,start_day:(start_of_summer+1)] > discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                   violations_bool = np.zeros_like(data, dtype=bool)
+            violations_prelim = [(np.sum(violations_bool[i]) -num_viols_allowed)*weight for i in range(num_yrs)]
+            violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         elif rule_type == 'minQ7day':
             data_7dma = movingaverage_2D(data, 7)
-            violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]
-            violations_prelim = [np.sum((violations_bool[i]) - num_viols_allowed)*weight for i in range(num_yrs)]
-            np.clip(violations_prelim,0,999999)
+            if season == 'none':            
+                violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]
+            elif season == 'summer':
+                if end_day < start_of_summer:
+                   violations_bool = np.zeros_like(data, dtype=bool)
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data_7dma[i][start_of_summer:(end_day+1)] < discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                    violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]                    
+            elif season == 'not_summer':
+                if end_day < start_of_summer:
+                    violations_bool = [data_7dma[i][start_day:(end_day+1)] < discharge for i in range(num_yrs)]                    
+                elif start_day < start_of_summer and end_day >= start_of_summer: 
+                    violations_bool = [data_7dma[i][start_day:(start_of_summer+1)] < discharge for i in range(num_yrs)]
+                elif start_day >= start_of_summer:
+                    violations_bool = np.zeros_like(data, dtype=bool)
+            violations_prelim = [(np.sum(violations_bool[i]) -num_viols_allowed)*weight for i in range(num_yrs)]
+            violations_prelim = np.clip(violations_prelim,0,999999)
             violations += violations_prelim
         else:
+            '---- Rule requested is not in the code ----'
             assert False
+    
     return violations
     
 def get_data():
@@ -452,7 +510,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [101]
+    plots_to_plot = [102,103]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
@@ -1179,6 +1237,7 @@ for plot_num in plots_to_plot:
         figsize_leg = (1.1,0.8)
         
         
+        # Get EF & BiOp rules
         EFrules = get_EFrules()
         EF_rules_list = [EFrules[key] for key in EFrules]
         EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
@@ -1186,19 +1245,20 @@ for plot_num in plots_to_plot:
         
         # Calculate Baseline
         file_nm = res_data_file
-       
+        
+        # Get flow data and check for violations of Environmental Flows and BiOp
         data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         num_yrs = np.shape(data1[0])[0]       
-        viols1 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+        viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
         data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols2 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+        viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
         data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols3 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
+        viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
-        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  #1's are drought
+        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  
                 
         # Calculate baseline-subtracted value
         window = binomial_window(15)
@@ -1207,7 +1267,7 @@ for plot_num in plots_to_plot:
         data_to_stack = []
         for key in scenarios:
             data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            viols1 = [RuleViolations(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
+            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
@@ -1227,15 +1287,165 @@ for plot_num in plots_to_plot:
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
                         linewidth = 1.5)
         
-        ylabel = r'$\Delta \, EF \,Viols\,$ [days]'
-        xlabel = 'Red = more EF violations'
+        ylabel = r'$\Delta \, EF \,Reliab\,$ [days]'
+        xlabel = 'Red = less EF reliability'
         write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "Change in Violations of BiOp and Environmental Flows"
-        file_graphics = 'change_in_Biop-EF_violations_wGrphs.png'        
+        title = "Change in Reliability of BiOp and Environmental Flows"
+        file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
+
+        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
+       
+
+
+
+##############################################################################
+#  ENVIRONMENTAL FLOWS        
+############  BiOp & Env Flows w mini figs SUMMER ONLY ############    
+    elif plot_num == 102:
+        plt.close()
+        num_locs = len(res_data_list)
+        figsize=[(1.1,0.8) for i in range(num_locs)]
+        figsize.append((1.1,0.8))
+        figsize_leg = (1.1,0.8)
+        
+        
+        # Get EF & BiOp rules
+        EFrules = get_EFrules()
+        EF_rules_list = [EFrules[key] for key in EFrules]
+        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+        
+        # Calculate Baseline
+        file_nm = res_data_file
+        
+        # Get flow data and check for violations of Environmental Flows and BiOp
+        data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        num_yrs = np.shape(data1[0])[0]       
+        viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+             
+        viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
+        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  
+                
+        # Calculate baseline-subtracted value
+        window = binomial_window(15)
+        viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)]
+        
+        data_to_stack = []
+        for key in scenarios:
+            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
+            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
+
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+        xctr = 0.5
+        yctr = 0.75
+        
+        redblue = ['red','blue']
+        num_yrs = len(viols_smthd[0])
+        write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
+        
+        ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
+        xlabel = 'Red = less Summer reliability'
+        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5, which_legend = 'EFs')
+               
+        
+        title = "Change in Summer Reliability of BiOp and Env Flows"
+        file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
+
+        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
+       
+
+##############################################################################
+#  ENVIRONMENTAL FLOWS        
+############  BiOp & Env Flows w mini figs NOT SUMMER  ############    
+    elif plot_num == 103:
+        plt.close()
+        num_locs = len(res_data_list)
+        figsize=[(1.1,0.8) for i in range(num_locs)]
+        figsize.append((1.1,0.8))
+        figsize_leg = (1.1,0.8)
+        
+        
+        # Get EF & BiOp rules
+        EFrules = get_EFrules()
+        EF_rules_list = [EFrules[key] for key in EFrules]
+        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+        
+        # Calculate Baseline
+        file_nm = res_data_file
+        
+        # Get flow data and check for violations of Environmental Flows and BiOp
+        data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        num_yrs = np.shape(data1[0])[0]       
+        viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+        
+        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
+             
+        viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
+        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  
+                
+        # Calculate baseline-subtracted value
+        window = binomial_window(15)
+        viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)]
+        
+        data_to_stack = []
+        for key in scenarios:
+            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
+            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
+
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+        xctr = 0.5
+        yctr = 0.75
+        
+        redblue = ['red','blue']
+        num_yrs = len(viols_smthd[0])
+        write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
+        
+        ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
+        xlabel = 'Red = less Summer reliability'
+        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5, which_legend = 'EFs')
+               
+        
+        title = "Change in Non-Summer Reliability of BiOp and Env Flows"
+        file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
        
