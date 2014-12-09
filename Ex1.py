@@ -232,6 +232,7 @@ def RuleReliability(data, num_yrs, rules, season='none'):
             '---- Rule requested is not in the code ----'
             assert False
     
+    violations = -1*violations
     return violations
     
 def get_data():
@@ -512,7 +513,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [103]
+    plots_to_plot = [101,102,103]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
@@ -1283,7 +1284,7 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
         
-        redblue = ['red','blue']
+        redblue = ['blue','red']
         num_yrs = len(viols_smthd[0])
         write_tinyfigs2(viols_smthd, upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
@@ -1359,7 +1360,7 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
         
-        redblue = ['red','blue']
+        redblue = ['blue','red']
         num_yrs = len(viols_smthd[0])
         write_tinyfigs2(viols_smthd, upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
@@ -1433,7 +1434,7 @@ for plot_num in plots_to_plot:
         xctr = 0.5
         yctr = 0.75
         
-        redblue = ['red','blue']
+        redblue = ['blue','red']
         num_yrs = len(viols_smthd[0])
         write_tinyfigs2(viols_smthd, upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
