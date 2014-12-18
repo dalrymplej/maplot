@@ -259,7 +259,8 @@ def get_data():
             'HighPop':                  '_HighPop_Run0',
             'UrbExpand':                '_UrbExpand_Run0',
             'FireSuppress':             '_FireSuppress_Run0',
-            'FullCostUrb':              '_FullCostUrb_Run0'
+            'FullCostUrb':              '_FullCostUrb_Run0',
+            'Extreme':                  '_Extreme_Run0'
             }
 
     return data, scenarios
@@ -512,7 +513,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [101,102,103]
+    plots_to_plot = [101]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
