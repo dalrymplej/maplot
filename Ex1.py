@@ -24,14 +24,14 @@ import math
 def get_EFdata():
     """ Returns tuple of data"""
     EFdata= {
-            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_HighClim_Run0.csv', 1), 
-            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
-            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
-            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_HighClim_Run0.csv', 4),
-            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_HighClim_Run0.csv', 4),
-            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
-            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4),
-            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_HighClim_Run0.csv', 4)
+            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Extreme_Run0.csv', 1), 
+            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Extreme_Run0.csv', 4),
+            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Extreme_Run0.csv', 4),
+            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4)
             }
 # Lat/long of 8 locations:
 #            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
@@ -460,7 +460,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
     x,y=WBmap(lons,lats)
     
     plt.text(0., 0., textstr, fontsize=3,verticalalignment='top')        
-    for i in graphs:
+    for i in graphs[1:]:
         marker = np.array(Image.open('tinyfig'+str(i)+'.png'))
         im = OffsetImage(marker, zoom=1)
         ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
@@ -513,7 +513,7 @@ if subbasins_loop:
     plots_to_plot = [60]
     
 if reservoirs_loop:
-    plots_to_plot = [101]
+    plots_to_plot = [101,102,103]
 
     EFdata = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
@@ -1254,10 +1254,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1269,7 +1269,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_HighClim_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1278,8 +1278,8 @@ for plot_num in plots_to_plot:
         upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
         lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)][1:]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)][1:]))
         viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
         xctr = 0.5
         yctr = 0.75
@@ -1292,12 +1292,12 @@ for plot_num in plots_to_plot:
         
         ylabel = r'$\Delta \, EF \,Reliab\,$ [days]'
         xlabel = 'Red = less EF reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+        write_legend2(viols_smthd[1], upper[1], lower[1],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "HighClim Reliability of BiOp and Environmental Flows"
+        title = "Extreme Reliability of BiOp and Environmental Flows"
         file_graphics = 'change_in_HiCl_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
@@ -1330,10 +1330,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1345,7 +1345,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_HighClim_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1354,8 +1354,8 @@ for plot_num in plots_to_plot:
         upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
         lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)[1:]]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)[1:]]))
         viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
         xctr = 0.5
         yctr = 0.75
@@ -1368,12 +1368,12 @@ for plot_num in plots_to_plot:
         
         ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
         xlabel = 'Red = less Summer reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+        write_legend2(viols_smthd[1], upper[1], lower[1],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "HighClim Summer Reliability of BiOp and Env Flows"
+        title = "Extreme Summer Reliability of BiOp and Env Flows"
         file_graphics = 'change_in_HiCl_summer_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
@@ -1404,10 +1404,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_HighClim_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1419,7 +1419,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_HighClim_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1428,8 +1428,8 @@ for plot_num in plots_to_plot:
         upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
         lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)[1:]]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)[1:]]))
         viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
         xctr = 0.5
         yctr = 0.75
@@ -1442,12 +1442,12 @@ for plot_num in plots_to_plot:
         
         ylabel = r'$\Delta \,Reliab\,$ [days]'
         xlabel = 'Red = less Non-Summer reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+        write_legend2(viols_smthd[1], upper[1], lower[1],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5, which_legend = 'EFs')
                
         
-        title = "HighClim Non-Summer Reliability of BiOp and Env Flows"
+        title = "Extreme Non-Summer Reliability of BiOp and Env Flows"
         file_graphics = 'change_in_HiCl_NONsummer_reliability_wGrphs.png'        
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=range(num_locs+1))
