@@ -27,6 +27,10 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
         return np.amin(data)
     elif oper == 'avg' or oper == 'Avg' or oper == 'average' or oper == 'Average':
         return np.average(data)
+    elif oper == 'avgmax' or oper == 'AvgMax' or oper == 'averagemaximum' or oper == 'Average_Maximum' or oper == 'AverageMaximum' or oper == 'AverageMax':
+        return np.average(np.amax(data,1))  # max of each row then average those
+    elif oper == 'avgmin' or oper == 'AvgMin' or oper == 'averageminimum' or oper == 'Average_Minimum' or oper == 'AverageMinimum' or oper == 'AverageMin':
+        return np.average(np.amin(data,1)) # min of each row then average those
     else:
         raise BaseException
 
