@@ -18,7 +18,7 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
     max_y = top_right[0]
     min_y = bottom_left[0]
     
-    data = array_2d[min_y:max_y,min_x:max_x]
+    data = array_2d[min_y:max_y+1,min_x:max_x+1]
     if oper == 'sum' or oper == 'Sum':
         return np.sum(data)
     elif oper == 'max' or oper == 'Max' or oper == 'maximum' or oper == 'Maximum':
@@ -31,6 +31,22 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
         return np.average(np.amax(data,1))  # max of each row then average those
     elif oper == 'avgmin' or oper == 'AvgMin' or oper == 'averageminimum' or oper == 'Average_Minimum' or oper == 'AverageMinimum' or oper == 'AverageMin':
         return np.average(np.amin(data,1)) # min of each row then average those
+    elif oper == 'std' or oper == 'Deviation' or oper == 'deviation' or oper == 'standard_deviation':
+        return np.std(data)
+    elif oper == 'median' or oper == 'Median' or oper == 'Med' or oper == 'med':
+        return np.median(data)
+    elif oper == '5%' or oper == 'five%' or oper == '5percentile' or oper == 'fifthpercentile':
+        return np.percentile(data,5)
+    elif oper == '10%' or oper == 'ten%' or oper == '10percentile' or oper == 'tenthpercentile':
+        return np.percentile(data,10)
+    elif oper == '25%' or oper == 'twentyfive%' or oper == '25percentile' or oper == 'twentyfifthpercentile':
+        return np.percentile(data,25)
+    elif oper == '75%' or oper == 'seventyfive%' or oper == '75percentile' or oper == 'seventyfifthpercentile':
+        return np.percentile(data,75)
+    elif oper == '90%' or oper == 'ninety%' or oper == '90percentile' or oper == 'ninetiethpercentile':
+        return np.percentile(data,90)
+    elif oper == '95%' or oper == 'ninetyfive%' or oper == '95percentile' or oper == 'ninetyfifthpercentile':
+        return np.percentile(data,95)
     else:
         raise BaseException
 
