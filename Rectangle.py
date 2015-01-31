@@ -1,4 +1,15 @@
 #Created by Owen Haggerty on the 16th of November, 2014
+
+# PLEASE ADD:
+#    standard deviation
+#    median
+#    5th percentile
+#    10th percentile
+#    25th percentile
+#    75th percentile
+#    90th percentile
+#    95th percentile
+
 import numpy as np
 
 def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
