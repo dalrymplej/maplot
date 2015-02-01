@@ -31,7 +31,7 @@ def np_rec_calc(array_2d,bottom_left,top_right,oper='avg'):
         return np.average(np.amax(data,1))  # max of each row then average those
     elif oper == 'avgmin' or oper == 'AvgMin' or oper == 'averageminimum' or oper == 'Average_Minimum' or oper == 'AverageMinimum' or oper == 'AverageMin':
         return np.average(np.amin(data,1)) # min of each row then average those
-    elif oper == 'std' or oper == 'Deviation' or oper == 'deviation' or oper == 'standard_deviation':
+    elif oper == 'stdev' or oper == 'Deviation' or oper == 'deviation' or oper == 'standard_deviation':
         return np.std(data)
     elif oper == 'median' or oper == 'Median' or oper == 'Med' or oper == 'med':
         return np.median(data)
