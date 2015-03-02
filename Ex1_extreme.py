@@ -24,14 +24,14 @@ import math
 def get_EFdata():
     """ Returns tuple of data"""
     EFdata= {
-            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
-            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
+            'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Extreme_Run0.csv', 1), 
+            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Extreme_Run0.csv', 4),
+            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Extreme_Run0.csv', 4),
+            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4),
+            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Extreme_Run0.csv', 4)
             }
 # Lat/long of 8 locations:
 #            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
@@ -550,7 +550,7 @@ for plot_num in plots_to_plot:
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Specific Discharge")
-        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
+        file_nm = data_path + 'Discharge_(Subbasins)_Extreme_Run0.csv'
         data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
@@ -566,7 +566,7 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
-        file_graphics = 'spQ.png'     
+        file_graphics = 'spQ_Extreme.png'     
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -587,19 +587,19 @@ for plot_num in plots_to_plot:
         
         plt.title("Change in Summer Hydrologic Drought")
         
-        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
+        file_nm = data_path + 'Discharge_(Subbasins)_Extreme_Run0.csv'
 
         data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd1 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+        data1=[mfx(file_nm.replace('_Extreme_','_Ref_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd2 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+        data1=[mfx(file_nm.replace('_Extreme_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd3 = data1
@@ -619,7 +619,7 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
-        file_graphics = 'drought_days.png'        
+        file_graphics = 'drought_days_Extreme.png'        
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -642,9 +642,9 @@ for plot_num in plots_to_plot:
         
         plt.title("Change in Annual Precipitation")
         
-        file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
+        file_nm = data_path + 'Climate_(Subbasin)_Extreme_Run0.csv'
         data1=[mfx(file_nm, column=subbasin_data_climate_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
-        file_nmWB = data_path + 'Climate_Ref_Run0.csv'
+        file_nmWB = data_path + 'Climate_Extreme_Run0.csv'
         data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
         data_hd1 = data1
         
@@ -662,7 +662,7 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
-        file_graphics = 'diff_ann_precip.png'        
+        file_graphics = 'diff_ann_precip_Extreme.png'        
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -685,9 +685,9 @@ for plot_num in plots_to_plot:
         
         plt.title("Change in Winter (Nov 1 - Mar 31) Temp")
         
-        file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
+        file_nm = data_path + 'Climate_(Subbasin)_Extreme_Run0.csv'
         data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-        file_nmWB = data_path + 'Climate_Ref_Run0.csv'
+        file_nmWB = data_path + 'Climate_Extreme_Run0.csv'
         data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd1 = data1
         
@@ -705,7 +705,7 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
         WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
-        file_graphics = 'diff_winter_Temp.png'        
+        file_graphics = 'diff_winter_Temp_Extreme.png'        
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -720,18 +720,18 @@ for plot_num in plots_to_plot:
         plt.close()
         
         # Calculate Baseline
-        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'       
+        file_nm = data_path + 'Discharge_(Subbasins)_Extreme_Run0.csv'       
         data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd1 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+        data1=[mfx(file_nm.replace('_Extreme_','_Ref_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd2 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+        data1=[mfx(file_nm.replace('_Extreme_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd3 = data1
@@ -749,7 +749,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+            data_hd1=[mfx(file_nm.replace('_Extreme_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                        movingaveragevec=np.ones(30)/30.) for i in range(12)]
             data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
             data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
@@ -780,7 +780,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5)
                
         title = "Change in Summer Hydrologic Drought"
-        file_graphics = 'change_in_drought_days_wGrphs.png'
+        file_graphics = 'change_in_drought_days_wGrphs_Extreme.png'
         
         graphs = range(13); graphs.remove(11)
 
@@ -791,8 +791,8 @@ for plot_num in plots_to_plot:
 ############  Winter Temperature w mini figs ############    
     elif plot_num == 5:
         plt.close()
-        file_nm = data_path + 'Climate_(Subbasin)_Ref_Run0.csv'
-        file_nmWB = data_path + 'Climate_Ref_Run0.csv'
+        file_nm = data_path + 'Climate_(Subbasin)_Extreme_Run0.csv'
+        file_nmWB = data_path + 'Climate_Extreme_Run0.csv'
        
         # Calculate Baseline
         data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
@@ -801,14 +801,14 @@ for plot_num in plots_to_plot:
         data_winter = [data_hd1[i][:,29:182] for i in range(12)]
         winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Extreme_','_Ref_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Extreme_','_Ref_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd2 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Extreme_','_LowClim_'), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Extreme_','_LowClim_'), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
         data_hd3 = data1
         
         data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
@@ -819,8 +819,8 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-            data_hd1.append(mfx(file_nmWB.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+            data_hd1=[mfx(file_nm.replace('_Extreme_Run0',scenarios[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+            data_hd1.append(mfx(file_nmWB.replace('_Extreme_Run0',scenarios[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
             data_winter = [data_hd1[i][:,29:182] for i in range(12)]
             winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
             winter_temps_smthd1 = [np.subtract(movingaverage(winter_tmps[i],window), baseline[i])[8:83] for i in range(12)]
@@ -850,7 +850,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5)
         
         title = "Change in Winter Temperatures (Nov - Mar)"
-        file_graphics = 'change_in_winter_temp_wGrphs.png'
+        file_graphics = 'change_in_winter_temp_wGrphs_Extreme.png'
         
         graphs = range(13); graphs.remove(11)
 
@@ -907,22 +907,22 @@ for plot_num in plots_to_plot:
 ############  Econ w mini figs w lines & shading ############    
     elif plot_num == 60:
         plt.close()
-        file_types = ['subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv', 
-                      'subbasin_tot_ac_of_developed_land_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_forest_land_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_dev_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_forest_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+        file_types = ['subbasin_tot_ac_of_ag_land_by_SUB_AREA_Extreme_Run0.csv', 
+                      'subbasin_tot_ac_of_developed_land_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ac_of_forest_land_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ag_land_values_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ag_land_values_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_ag_land_values_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_dev_land_values_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_forest_land_values_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv',
+                      'subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv',
                       ]
         
         for subfiletype in file_types:
@@ -934,7 +934,7 @@ for plot_num in plots_to_plot:
             title = file_nm.partition(data_path)[2][:-13]
             png_file_nm = title+'.png'
             for key in scenarios:
-                data_v = np.array(np.genfromtxt(file_nm.replace('_Ref_Run0',scenarios[key]), delimiter=',',skip_header=1))
+                data_v = np.array(np.genfromtxt(file_nm.replace('_Extreme_Run0',scenarios[key]), delimiter=',',skip_header=1))
                 data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
                 data1.append(data_v[2:,1])
                 baseline = [data1[i][0] for i in range(11)]
@@ -981,18 +981,18 @@ for plot_num in plots_to_plot:
     elif plot_num == 7:
         plt.close()
         run_names = [
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Extreme_Run0.csv')
         ]
         
         for key in scenarios:
             
             for files in run_names:
-                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                files_scen = (files[0].replace(scenarios['Extreme'],scenarios[key]),files[1].replace(scenarios['Extreme'],scenarios[key]))
                 print files_scen
                 title = files_scen[0][:-4]
                 file_nm_num = data_path + files_scen[0]
@@ -1039,12 +1039,12 @@ for plot_num in plots_to_plot:
     elif plot_num == 70:
         plt.close()
         run_names = [
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
+        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Extreme_Run0.csv'),
+        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Extreme_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Extreme_Run0.csv')
         ]
         
             
@@ -1053,7 +1053,7 @@ for plot_num in plots_to_plot:
             title = files[0][:-13]
             print title
             for key in scenarios:
-                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                files_scen = (files[0].replace(scenarios['Extreme'],scenarios[key]),files[1].replace(scenarios['Extreme'],scenarios[key]))
                 file_nm_num = data_path + files_scen[0]
                 file_nm_denom = data_path + files_scen[1]
                 file_nmWB = file_nm_num     
@@ -1105,7 +1105,7 @@ for plot_num in plots_to_plot:
             
 ############  Center of Timing w mini figs ############    
     elif plot_num == 8:
-        file_nm = data_path + 'Discharge_(Subbasins)_Ref_Run0.csv'
+        file_nm = data_path + 'Discharge_(Subbasins)_Extreme_Run0.csv'
        
         plt.close()
         
@@ -1114,12 +1114,12 @@ for plot_num in plots_to_plot:
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd1 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], 
+        data1=[mfx(file_nm.replace('_Extreme_','_Ref_'), column=subbasin_data_order[i], 
                    skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd2 = data1
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], 
+        data1=[mfx(file_nm.replace('_Extreme_','_LowClim_'), column=subbasin_data_order[i], 
                    skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd3 = data1
@@ -1135,7 +1135,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+            data1=[mfx(file_nm.replace('_Extreme_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
             data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
             ctdata = [np.array(ct(data1[i])) for i in range(12)]
             delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata[i],window), baseline[i]) for i in range(12)]
@@ -1164,7 +1164,7 @@ for plot_num in plots_to_plot:
                       linewidth=1.5)
             
         title = "Change in Timing of Discharge (CT)"
-        file_graphics = 'change_in_discharge_timing_wGrphs.png'        
+        file_graphics = 'change_in_discharge_timing_wGrphs_Extreme.png'        
         graphs = range(13); graphs.remove(11)
 
         write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
@@ -1179,21 +1179,21 @@ for plot_num in plots_to_plot:
         figsize_leg9=(figsize_leg[0],figsize_leg[1]*1.5) 
         
         # Calculate Baseline
-        file_nm = data_path + 'Snow_(Subbasin)_Ref_Run0.csv'
-        file_nmWB = data_path + 'Snow_(mm)_Ref_Run0.csv'
+        file_nm = data_path + 'Snow_(Subbasin)_Extreme_Run0.csv'
+        file_nmWB = data_path + 'Snow_(mm)_Extreme_Run0.csv'
        
         data1=[mfx(file_nm, column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
         data1.append(mfx(file_nmWB, column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Extreme_','_Ref_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_HighClim_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Extreme_','_Ref_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE2 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
+        data1=[mfx(file_nm.replace('_Extreme_','_LowClim_'), column=subbasin_data_snow_col[i], skip=cst.day_of_year_oct1)
                    for i in range(11)]
-        data1.append(mfx(file_nmWB.replace('_Ref_','_LowClim_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+        data1.append(mfx(file_nmWB.replace('_Extreme_','_LowClim_'), column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
         SWE3 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
         
         SWE_avg = [(SWE1[i]+SWE2[i]+SWE3[i])/3. for i in range(12)]
@@ -1205,9 +1205,9 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_snow_col[i], 
+            data1=[mfx(file_nm.replace('_Extreme_Run0',scenarios[key]), column=subbasin_data_snow_col[i], 
                        skip=cst.day_of_year_oct1) for i in range(11)]
-            data1.append(mfx(file_nmWB.replace('_Ref_Run0',scenarios[key]), 
+            data1.append(mfx(file_nmWB.replace('_Extreme_Run0',scenarios[key]), 
                              column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
             SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
             data_to_stack.append([np.subtract(movingaverage(SWE1[i],window), baseline[i]) for i in range(12)])  
@@ -1237,7 +1237,7 @@ for plot_num in plots_to_plot:
                
         
         title = "Change in Basin-Averaged Max SWE"
-        file_graphics = 'change_in_max_SWE_wGrphs.png'        
+        file_graphics = 'change_in_max_SWE_wGrphs_Extreme.png'        
         graphs = range(13); graphs.remove(11)
 
         write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
@@ -1267,10 +1267,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1282,7 +1282,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1311,7 +1311,7 @@ for plot_num in plots_to_plot:
                
         
         title = "Reliability of BiOp and Environmental Flows"
-        file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
+        file_graphics = 'change_in_Biop-EF_reliability_wGrphs_Extreme.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
@@ -1344,10 +1344,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1359,7 +1359,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1388,7 +1388,7 @@ for plot_num in plots_to_plot:
                
         
         title = "Summer Reliability of BiOp and Env Flows"
-        file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
+        file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs_Extreme.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
@@ -1419,10 +1419,10 @@ for plot_num in plots_to_plot:
         num_yrs = np.shape(data1[0])[0]       
         viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_HighClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_Ref_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
         
-        data1=[mfx(file_nm[i].replace('_Ref_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+        data1=[mfx(file_nm[i].replace('_Extreme_','_LowClim_'), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
         viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
              
         viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
@@ -1434,7 +1434,7 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         for key in scenarios:
-            data1=[mfx(file_nm[i].replace('_Ref_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            data1=[mfx(file_nm[i].replace('_Extreme_Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
             data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
 
@@ -1463,7 +1463,7 @@ for plot_num in plots_to_plot:
                
         
         title = "Non-Summer Reliability of BiOp and Env Flows"
-        file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
+        file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs_Extreme.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
         write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
