@@ -3,10 +3,12 @@
 File containing constants to be used in various WW2100 graphics scripts.
 """
 import datetime
+import math
 
 day_of_year_jan1 = 1
 day_of_year_jan31 = 31
 day_of_year_feb1 = 32
+day_of_year_feb28 = 59
 day_of_year_mar1 = 60
 day_of_year_mar15 = 74
 day_of_year_mar16 = 75
@@ -40,7 +42,9 @@ day_of_year_oct15 = 288
 day_of_year_oct16 = 289
 day_of_year_oct31 = 304
 day_of_year_nov1 = 305
+day_of_year_nov30 = 334
 day_of_year_dec1 = 335
+day_of_year_dec31 = 365
 
 Jan1_1900 = datetime.date(1900,1,1)
 Jan1_2010 = datetime.date(2010,1,1)
@@ -53,3 +57,9 @@ acftperday_to_m3s = acft_to_m3/86400.
 seconds_in_yr = 86400.*365.25
 days_in_yr = 365
 ft_to_m = 0.3048
+Willamette_Basin_area = 29728.*1.e6  # m2
+Willamette_Basin_area_at_PDX = 11200.*math.pow(5280.*.3048,2) #11200 sq mi @ PDX
+seconds_in_day = 86400.
+days_in_15_yrs = 15*365
+days_in_30_yrs = 30*365
+days_in_60_yrs = 60*365
