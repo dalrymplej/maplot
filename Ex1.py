@@ -236,20 +236,20 @@ def RuleReliability(data, num_yrs, rules, season='none'):
     
 def get_data():
     """ Returns tuple of data"""
-    ##                                  Long (mth)  Lat (mth)  Col     Area       Long (mth)   Lat (mth) Col Col
+    ##                                  Long (mth)  Lat (mth)  Col     Area       Long (mth)   Lat (mth) Col Col Col
     data= {
-            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1), 
-            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10),
-            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21, 11),
-            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3, 2),
-            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5, 3),
-            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7, 4),
-            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5),
-            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6),
-            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7),
-            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8),
-            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9),
-            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1)
+            'McKenzie':                 (-123.1043, 44.1256,    1,  3307033881.96,-122.287768,  44.14907, 1, 1, 3), 
+            'Middle Fork Willamette':   (-122.9073, 43.9998,    2,  3482874058.62,-122.39528,	43.757159, 19, 10, 21),
+            'Upper Yamhill':            (-123.1445, 45.2257,    3,  1340602668.23, -123.440166,	45.095052, 21, 11, 23),
+            'Pudding':                  (-122.7162, 45.2976,    4,  2268590002.85,-122.606776,	45.0444, 3, 2, 5),
+            'Clackamas':                (-122.6077, 45.3719,    5,  2434914144.62,-122.088399,	45.11371, 5, 3, 7),
+            'Long Tom':                 (-123.2569, 44.3807,    6,  1050268949.3,-123.309363,	44.088905, 7, 4, 9),
+            'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5, 11),
+            'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6, 13),
+            'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7, 15),
+            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8, 17),
+            'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9, 19),
+            'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1, 1)
             }
             
     scenarios = {
@@ -488,7 +488,7 @@ figsize.append((0.8,0.6))
 figsize_leg = (0.8,0.6)
 
 subbasins_loop = True 
-reservoirs_loop = True
+reservoirs_loop = False
 
 subbasin_data, scenarios = get_data()
 
@@ -504,6 +504,7 @@ if subbasins_loop:
     subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
     subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
     subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
+    subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
     
     lons = subbasin_data_lons
     lons[11]=subbasin_data_lons[11]+0.2
@@ -513,7 +514,7 @@ if subbasins_loop:
     lats.append(45.55)
 
     #plots_to_plot = range(4,5)
-    plots_to_plot.extend([4,5,8,9])
+    plots_to_plot.extend([45])
     
 if reservoirs_loop:
     plots_to_plot.extend([101,102,103])
@@ -725,6 +726,79 @@ for plot_num in plots_to_plot:
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data_hd1 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd2 = data1
+        
+        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        data_hd3 = data1
+        
+        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
+        data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
+        
+        summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+        baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
+        
+        # Calculate baseline-subtracted value
+        window = binomial_window(15)
+        summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)]
+        
+        data_to_stack = []
+        for key in scenarios:
+            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)])  
+        
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i],1) for i in range(12)]
+        lower = [np.min(data_stacked[i],1) for i in range(12)]
+        
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+        xctr = 0.5
+        yctr = 0.5
+        
+        redblue = ['red','blue']
+        num_yrs = len(summer_dr_d_smthd[0])
+        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
+        
+        ylabel = r'$\Delta \, Drought\,$ [days]'
+        xlabel = 'Red = Drier'
+        write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
+               
+        title = "Change in Summer Hydrologic Drought"
+        file_graphics = 'change_in_drought_days_wGrphs.png'
+        
+        graphs = range(13); graphs.remove(11)
+
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+
+
+############  Water Deficit w mini figs/LINES & SHADING ############    
+    elif plot_num == 45:
+        plt.close()
+        
+        # Calculate Baseline
+        file_nm = data_path + 'ET_by_Subbasin_Ref_Run0.csv'       
+        data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
+        data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
+        data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
+        wd1 = [nrc(data_hd1[i],[69,260],[88,350], oper='sum') for i in range(12)]
+        assert False
         
         data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                    movingaveragevec=np.ones(30)/30.) for i in range(12)]
