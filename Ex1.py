@@ -741,7 +741,7 @@ for plot_num in plots_to_plot:
         Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
         data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
         
-        summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+        summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
         baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
         
         # Calculate baseline-subtracted value
@@ -754,7 +754,7 @@ for plot_num in plots_to_plot:
                        movingaveragevec=np.ones(30)/30.) for i in range(12)]
             data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
             data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
             data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)])  
         
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
@@ -797,38 +797,41 @@ for plot_num in plots_to_plot:
         data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
         data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
-        wd1 = [nrc(data_hd1[i],[69,260],[88,350], oper='sum') for i in range(12)]
-        assert False
+        wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
         
-        data1=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd2 = data1
+        data_ET=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_ET_col[i], 
+                     skip=cst.day_of_year_oct1) for i in range(12)]
+        data_PET=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_ET_col[i]+1, 
+                     skip=cst.day_of_year_oct1) for i in range(12)]
+        data_hd2 = [data_PET[i] - data_ET[i] for i in range(12)]
+        wd2 = [np.sum(data_hd2[i][:,:],1) for i in range(12)]
         
-        data1=[mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd3 = data1
+        data_ET = [mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_ET_col[i], 
+                       skip=cst.day_of_year_oct1) for i in range(12)]
+        data_PET= [mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_ET_col[i]+1, 
+                      skip=cst.day_of_year_oct1) for i in range(12)]
+        data_hd3 = [data_PET[i] - data_ET[i] for i in range(12)]
+        wd3 = [np.sum(data_hd3[i][:,:],1) for i in range(12)]
         
-        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
-        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
-        data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
-        
-        summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
-        baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
-        
+        data_avg = [(wd1[i] + wd2[i] + wd3[i]) /3. for i in range(12)]
+        baseline = [np.ones(89)*np.average(data_avg[i][0:10]) for i in range(12)]
+                
         # Calculate baseline-subtracted value
         window = binomial_window(15)
-        summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)]
+        wd_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
         
         data_to_stack = []
+        print 'here1'
         for key in scenarios:
-            data_hd1=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
-            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:351],1) for i in range(12)]
-            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)])  
+            data_ET=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
+                         skip=cst.day_of_year_oct1) for i in range(12)]
+            data_PET=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
+                         skip=cst.day_of_year_oct1) for i in range(12)]
+            data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
+            wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
+            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
+            data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
+            print 'here ', key
         
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
         
@@ -842,19 +845,19 @@ for plot_num in plots_to_plot:
         yctr = 0.5
         
         redblue = ['red','blue']
-        num_yrs = len(summer_dr_d_smthd[0])
-        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
+        num_yrs = len(wd1_smthd[0])
+        write_tinyfigs2(wd_smthd,upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
                         linewidth = 1.5)
         
-        ylabel = r'$\Delta \, Drought\,$ [days]'
+        ylabel = r'$\Delta \, Deficit\,$ [mm]'
         xlabel = 'Red = Drier'
-        write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
+        write_legend2(wd1_smthd[11], upper[11], lower[11],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5)
                
-        title = "Change in Summer Hydrologic Drought"
-        file_graphics = 'change_in_drought_days_wGrphs.png'
+        title = "Change in Water Deficit"
+        file_graphics = 'change_in_water_deficit_wGrphs.png'
         
         graphs = range(13); graphs.remove(11)
 
