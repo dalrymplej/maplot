@@ -793,22 +793,22 @@ for plot_num in plots_to_plot:
         plt.close()
         
         # Calculate Baseline
-        file_nm = data_path + 'ET_by_Subbasin_Ref_Run0.csv'       
+        file_nm = data_path + 'ET_by_Subbasin_HighClim_Run0.csv'       
         data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
         data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
         
-        data_ET=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_ET_col[i], 
+        data_ET=[mfx(file_nm.replace('_HighClim_','_Ref_'), column=subbasin_data_ET_col[i], 
                      skip=cst.day_of_year_oct1) for i in range(12)]
-        data_PET=[mfx(file_nm.replace('_Ref_','_HighClim_'), column=subbasin_data_ET_col[i]+1, 
+        data_PET=[mfx(file_nm.replace('_HighClim_','_Ref_'), column=subbasin_data_ET_col[i]+1, 
                      skip=cst.day_of_year_oct1) for i in range(12)]
         data_hd2 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd2 = [np.sum(data_hd2[i][:,:],1) for i in range(12)]
         
-        data_ET = [mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_ET_col[i], 
+        data_ET = [mfx(file_nm.replace('_HighClim_','_LowClim_'), column=subbasin_data_ET_col[i], 
                        skip=cst.day_of_year_oct1) for i in range(12)]
-        data_PET= [mfx(file_nm.replace('_Ref_','_LowClim_'), column=subbasin_data_ET_col[i]+1, 
+        data_PET= [mfx(file_nm.replace('_HighClim_','_LowClim_'), column=subbasin_data_ET_col[i]+1, 
                       skip=cst.day_of_year_oct1) for i in range(12)]
         data_hd3 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd3 = [np.sum(data_hd3[i][:,:],1) for i in range(12)]
@@ -823,9 +823,9 @@ for plot_num in plots_to_plot:
         data_to_stack = []
         print 'here1'
         for key in scenarios:
-            data_ET=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
+            data_ET=[mfx(file_nm.replace('_HighClim_Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
                          skip=cst.day_of_year_oct1) for i in range(12)]
-            data_PET=[mfx(file_nm.replace('_Ref_Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
+            data_PET=[mfx(file_nm.replace('_HighClim_Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
                          skip=cst.day_of_year_oct1) for i in range(12)]
             data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
             wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
@@ -856,8 +856,8 @@ for plot_num in plots_to_plot:
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5)
                
-        title = "Change in Water Deficit"
-        file_graphics = 'change_in_water_deficit_wGrphs.png'
+        title = "Change in Water Deficit (HighClim)"
+        file_graphics = 'change_in_water_deficit_wGrphs_HighClim.png'
         
         graphs = range(13); graphs.remove(11)
 
