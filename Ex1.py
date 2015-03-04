@@ -512,7 +512,7 @@ if subbasins_loop:
     lats = subbasin_data_lats
 #    lats.append(43.9)
     lats.append(45.55)
-    file_baseline = '_Extreme_'
+    file_baseline = '_HighClim_'
     file_high = '_Ref_'
     file_low = '_LowClim_'
 
@@ -797,12 +797,15 @@ for plot_num in plots_to_plot:
         plt.close()
         
         # Calculate Baseline
-        file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'       
+        file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
+#        file_ex = 
+        print file_nm
         data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
         data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
         
+        print file_nm.replace(file_baseline,file_high)
         data_ET=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_ET_col[i], 
                      skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_ET_col[i]+1, 
@@ -810,6 +813,7 @@ for plot_num in plots_to_plot:
         data_hd2 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd2 = [np.sum(data_hd2[i][:,:],1) for i in range(12)]
         
+        file_nm.replace(file_baseline,file_low)
         data_ET = [mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_ET_col[i], 
                        skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET= [mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_ET_col[i]+1, 
@@ -854,7 +858,7 @@ for plot_num in plots_to_plot:
         
         ylabel = r'$\Delta \, Deficit\,$ [mm]'
         xlabel = 'Red = Drier'
-        write_legend2(wd1_smthd[11], upper[11], lower[11],figsize_leg,
+        write_legend2(wd_smthd[11], upper[11], lower[11],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5)
                
