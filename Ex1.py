@@ -512,7 +512,7 @@ if subbasins_loop:
     lats = subbasin_data_lats
 #    lats.append(43.9)
     lats.append(45.55)
-    file_baseline = '_HighClim_'
+    file_baseline = '_Extreme_'
     file_high = '_Ref_'
     file_low = '_LowClim_'
 
@@ -798,10 +798,11 @@ for plot_num in plots_to_plot:
         
         # Calculate Baseline
         file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
-#        file_ex = 
-        print file_nm
+        file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
         data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
+        data_ET[11]  = mfx(file_ex, column=1, skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
+        data_PET[11] = mfx(file_ex, column=2, skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
         data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
         
@@ -810,6 +811,10 @@ for plot_num in plots_to_plot:
                      skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_ET_col[i]+1, 
                      skip=cst.day_of_year_oct1) for i in range(12)]
+        data_ET[11]  = mfx(file_ex.replace(file_baseline,file_high), column=1, 
+                     skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
+        data_PET[11] = mfx(file_ex.replace(file_baseline,file_high), column=2, 
+                     skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
         data_hd2 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd2 = [np.sum(data_hd2[i][:,:],1) for i in range(12)]
         
@@ -818,6 +823,10 @@ for plot_num in plots_to_plot:
                        skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET= [mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_ET_col[i]+1, 
                       skip=cst.day_of_year_oct1) for i in range(12)]
+        data_ET[11]  = mfx(file_ex.replace(file_baseline,file_low), column=1, 
+                      skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
+        data_PET[11] = mfx(file_ex.replace(file_baseline,file_low), column=2, 
+                      skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
         data_hd3 = [data_PET[i] - data_ET[i] for i in range(12)]
         wd3 = [np.sum(data_hd3[i][:,:],1) for i in range(12)]
         
@@ -834,6 +843,10 @@ for plot_num in plots_to_plot:
                          skip=cst.day_of_year_oct1) for i in range(12)]
             data_PET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
                          skip=cst.day_of_year_oct1) for i in range(12)]
+            data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=1, 
+                         skip=cst.day_of_year_oct1)
+            data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=2, 
+                         skip=cst.day_of_year_oct1)
             data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
             wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
             wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
