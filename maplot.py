@@ -268,10 +268,29 @@ def get_data():
             'HighPop':                  '_HighPop_Run0',
             'UrbExpand':                '_UrbExpand_Run0',
             'FireSuppress':             '_FireSuppress_Run0',
+            'FullCostUrb':              '_FullCostUrb_Run0',
+            'Managed':                  '_Managed_Run0',
             'Extreme':                  '_Extreme_Run0'
             }
 
-    return data, scenarios
+    scenarios_own = {
+            'Reference':                'Reference',
+            'HighClim':                 'HighClim',
+            'LowClim':                  'Reference',  # !!Change to LowClim once GFDL historical is fixed
+            'HighPop':                  'Reference',
+            'UrbExpand':                'Reference',
+            'FireSuppress':             'Reference',
+            'FullCostUrb':              'Reference',
+            'Managed':                  'Reference',
+            'Extreme':                  'HighClim'
+            }
+    
+    SimulatedHistoric = {
+            'Reference':                '_HistoricRef_Run0',
+            'HighClim':                 '_HistoricHadGEM_Run0',
+            'LowClim':                  '_HistoricGFDL_Run0',
+            }
+    return data, scenarios, scenarios_own, SimulatedHistoric
 
 
 def getfilenames(data_path, searchword):
@@ -498,7 +517,7 @@ figsize_leg = (0.8,0.6)
 subbasins_loop = True 
 reservoirs_loop = False
 
-subbasin_data, scenarios = get_data()
+subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 
 plots_to_plot = []
 
@@ -521,11 +540,13 @@ if subbasins_loop:
 #    lats.append(43.9)
     lats.append(45.55)
     file_baseline = '_Ref_'
+    baseline_case = 'Reference'
     file_high = '_Extreme_'
     file_low = '_LowClim_'
 
-    #plots_to_plot = range(4,5)
-    plots_to_plot.extend([4,45,5,8,9])
+#    plots_to_plot = range(4)
+    plots_to_plot.extend([4])
+#    plots_to_plot.extend([4,45,5,8,9])
     #plots_to_plot.extend([45])
     
 if reservoirs_loop:
@@ -732,42 +753,32 @@ for plot_num in plots_to_plot:
     elif plot_num == 4:
         plt.close()
         
-        # Calculate Baseline
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'       
-        data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd1 = data1
-        
-        data1=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd2 = data1
-        
-        data1=[mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd3 = data1
-        
-        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
-        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
-        data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
-        
-        summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-        baseline = [np.mean(summer_dr_d[i][:30]) for i in range(12)]
-        
-        # Calculate baseline-subtracted value
         window = binomial_window(15)
-        summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)]
+        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
+        # Calculate Baselines
+        baseline = {}
+        Q10 = {}
+        for key in SimulatedHistoric:
+            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+            Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
+            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})
+        
         
         data_to_stack = []
         for key in scenarios:
             data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                        movingaveragevec=np.ones(30)/30.) for i in range(12)]
             data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[i]) for i in range(12)]  #1's are drought
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[scenarios_own[key]][i]) for i in range(12)]  #1's are drought
             summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[i]) for i in range(12)])  
+            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
+            # Calculate baseline-subtracted value
+            if key == baseline_case:
+                summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
         
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
         
@@ -804,9 +815,28 @@ for plot_num in plots_to_plot:
     elif plot_num == 45:
         plt.close()
         
-        # Calculate Baseline
+        window = binomial_window(15)
         file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
         file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
+        # Calculate Baseline
+        baseline = {}
+        ## WORKING HERE
+        for key in SimulatedHistoric:
+            data_ET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i], 
+                         skip=cst.day_of_year_oct1) for i in range(12)]
+            data_PET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i]+1, 
+                         skip=cst.day_of_year_oct1) for i in range(12)]
+            data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=1, 
+                         skip=cst.day_of_year_oct1)
+            data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=2, 
+                         skip=cst.day_of_year_oct1)
+            data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
+            wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
+            baseline = [np.ones(59)*np.average(wd1[i]) for i in range(12)]
+            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
+            data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
+
+
         data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
         data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
         data_ET[11]  = mfx(file_ex, column=1, skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
