@@ -288,7 +288,7 @@ def get_data():
     SimulatedHistoric = {
             'Reference':                '_HistoricRef_Run0',
             'HighClim':                 '_HistoricHadGEM_Run0',
-            'LowClim':                  '_HistoricGFDL_Run0',
+            'LowClim':                  '_HistoricRef_Run0'          # !!Change to _HistoricGFDL_Run0 once GFDL historical is fixed
             }
     return data, scenarios, scenarios_own, SimulatedHistoric
 
@@ -765,8 +765,7 @@ for plot_num in plots_to_plot:
             Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
             data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
             summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})
-        
+            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})  
         
         data_to_stack = []
         for key in scenarios:
@@ -820,7 +819,6 @@ for plot_num in plots_to_plot:
         file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
         # Calculate Baseline
         baseline = {}
-        ## WORKING HERE
         for key in SimulatedHistoric:
             data_ET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i], 
                          skip=cst.day_of_year_oct1) for i in range(12)]
@@ -832,49 +830,8 @@ for plot_num in plots_to_plot:
                          skip=cst.day_of_year_oct1)
             data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
             wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
-            baseline = [np.ones(59)*np.average(wd1[i]) for i in range(12)]
-            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
-            data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
-
-
-        data_ET  =[mfx(file_nm, column=subbasin_data_ET_col[i], skip=cst.day_of_year_oct1) for i in range(12)]
-        data_PET =[mfx(file_nm, column=subbasin_data_ET_col[i]+1, skip=cst.day_of_year_oct1) for i in range(12)]
-        data_ET[11]  = mfx(file_ex, column=1, skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_PET[11] = mfx(file_ex, column=2, skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
-        wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
-        
-        print file_nm.replace(file_baseline,file_high)
-        data_ET=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_ET_col[i], 
-                     skip=cst.day_of_year_oct1) for i in range(12)]
-        data_PET=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_ET_col[i]+1, 
-                     skip=cst.day_of_year_oct1) for i in range(12)]
-        data_ET[11]  = mfx(file_ex.replace(file_baseline,file_high), column=1, 
-                     skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_PET[11] = mfx(file_ex.replace(file_baseline,file_high), column=2, 
-                     skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_hd2 = [data_PET[i] - data_ET[i] for i in range(12)]
-        wd2 = [np.sum(data_hd2[i][:,:],1) for i in range(12)]
-        
-        file_nm.replace(file_baseline,file_low)
-        data_ET = [mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_ET_col[i], 
-                       skip=cst.day_of_year_oct1) for i in range(12)]
-        data_PET= [mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_ET_col[i]+1, 
-                      skip=cst.day_of_year_oct1) for i in range(12)]
-        data_ET[11]  = mfx(file_ex.replace(file_baseline,file_low), column=1, 
-                      skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_PET[11] = mfx(file_ex.replace(file_baseline,file_low), column=2, 
-                      skip=cst.day_of_year_oct1)   # Need average for whole WB, in different file
-        data_hd3 = [data_PET[i] - data_ET[i] for i in range(12)]
-        wd3 = [np.sum(data_hd3[i][:,:],1) for i in range(12)]
-        
-        data_avg = [(wd1[i] + wd2[i] + wd3[i]) /3. for i in range(12)]
-        baseline = [np.ones(89)*np.average(data_avg[i][0:10]) for i in range(12)]
+            baseline.update({key:[np.ones(89)*np.average(wd1[i]) for i in range(12)]})
                 
-        # Calculate baseline-subtracted value
-        window = binomial_window(15)
-        wd_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
-        
         data_to_stack = []
         for key in scenarios:
             data_ET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
@@ -887,8 +844,11 @@ for plot_num in plots_to_plot:
                          skip=cst.day_of_year_oct1)
             data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
             wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
-            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[i])[8:83] for i in range(12)]
+            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
             data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
+            # Calculate baseline-subtracted value
+            if key == baseline_case:
+                    wd_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
         
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
         
@@ -925,6 +885,7 @@ for plot_num in plots_to_plot:
 ############  Winter Temperature w mini figs ############    
     elif plot_num == 5:
         plt.close()
+        window = binomial_window(15)
         file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
         file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
        
