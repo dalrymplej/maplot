@@ -25,26 +25,27 @@ def get_EFdata():
     """ Returns tuple of data"""
     EFdata= {
             'Salem':                    (-123.3, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
-            'Hills Creek':              (-122.35, 43.65, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Fall Creek':               (-122.7, 44.05, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Dexter':                   (-122.62, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Big Cliff':                (-122.4, 44.8, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-            'Foster':                   (-122.641251, 44.5, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Blue River':               (-122.279801, 44.25, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-            'Cougar':                   (-122.3, 44.15, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
+            'Hills Creek':              (-122.35, 43.57, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Fall Creek':               (-122.7, 44.08, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Dexter':                   (-122.6, 43.88, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+            'Big Cliff':                (-122.4, 44.87, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
+            'Foster':                   (-122.641251, 44.55, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Blue River':               (-122.279801, 44.27, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
+            'Cougar':                   (-122.18, 44.12, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
             }
 # Lat/long of 8 locations:
-#            'Salem':                    (-123.038507, 44.941741, 1, 'Willamette_at_Salem_(m3_s)_Ref_Run0.csv', 1), 
-#            'Hills Creek':              (-122.423156, 43.676881, 2, 'Hills_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-#            'Fall Creek':               (-122.739280, 43.951271, 3, 'Fall_Creek_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-#            'Dexter':                   (-122.787811, 43.913641, 4, 'Dexter_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-#            'Big Cliff':                (-122.266989, 44.732960, 5, 'Big_Cliff_Reservoir_(USACE_-_re-regulating)_Reservoir_Ref_Run0.csv', 4),
-#            'Foster':                   (-122.641251, 44.414983, 6, 'Foster_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-#            'Blue River':               (-122.279801, 44.182290, 7, 'Blue_River_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4),
-#            'Cougar':                   (-122.231298, 44.107187, 8, 'Cougar_Reservoir_(USACE)_Reservoir_Ref_Run0.csv', 4)
-#    
+    DamLocs= {
+            'Salem':                    (-123.038507, 44.941741, 1), 
+            'Hills Creek':              (-122.423156, 43.676881, 2),
+            'Fall Creek':               (-122.739280, 43.951271, 3),
+            'Dexter':                   (-122.787811, 43.913641, 4),
+            'Big Cliff':                (-122.266989, 44.732960, 5),
+            'Foster':                   (-122.641251, 44.414983, 6),
+            'Blue River':               (-122.279801, 44.182290, 7),
+            'Cougar':                   (-122.231298, 44.107187, 8)
+            }
             
-    return EFdata
+    return EFdata, DamLocs
     
     
 def get_EFrules():
@@ -467,7 +468,7 @@ def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xla
     return
     
     
-def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
+def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), lons2=None, lats2=None):
     """Write the map
     """
     from matplotlib import pyplot as plt
@@ -493,7 +494,11 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13)):
         im = OffsetImage(marker, zoom=1)
         ab = AnnotationBbox(im, (x[i],y[i]), xycoords='data', frameon=False, box_alignment=(xctr, yctr))
         WBmap._check_ax().add_artist(ab)
-#        plt.show()
+
+    if lons2 is not None:         # if lons2 has a value
+        x2,y2=WBmap(lons2,lats2)
+        WBmap.scatter(x2, y2, marker='o',  s=50, lw=0,c='k')
+
     plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
     plt.close()       
 
@@ -552,9 +557,9 @@ if subbasins_loop:
     
 if reservoirs_loop:
 #    plots_to_plot.extend([101,102,103])
-    plots_to_plot.extend([101])
+    plots_to_plot.extend([103])
 
-    EFdata = get_EFdata()
+    EFdata, DamLocs = get_EFdata()
     res_data_list = [EFdata[key] for key in EFdata]
     res_data_list = sorted(res_data_list, key=lambda x: x[2])  # order list by number
     res_data_lons = [res_data_list[i][0] for i in range(len(res_data_list))]
@@ -568,7 +573,11 @@ if reservoirs_loop:
     EFlons.append(-123.7)
 #1    EFlats.append(43.9)
     EFlats.append(45.55)
-   
+    
+    dam_data_list = [DamLocs[key] for key in DamLocs]
+    dam_data_lons = [dam_data_list[i][0] for i in range(len(dam_data_list))]
+    dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
+    
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
@@ -1312,8 +1321,7 @@ for plot_num in plots_to_plot:
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
         figsize_leg = (1.1,0.8)
-        
-        
+                
         # Get EF & BiOp rules
         EFrules = get_EFrules()
         EF_rules_list = [EFrules[key] for key in EFrules]
@@ -1322,6 +1330,7 @@ for plot_num in plots_to_plot:
         
         # Calculate Baseline
         file_nm = res_data_file
+        baseline = {}
         for key in SimulatedHistoric:
             data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
             num_yrs = np.shape(data1[0])[0]       
@@ -1366,7 +1375,8 @@ for plot_num in plots_to_plot:
         file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
-        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
+        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), 
+                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
        
 
 
@@ -1376,11 +1386,11 @@ for plot_num in plots_to_plot:
 ############  BiOp & Env Flows w mini figs SUMMER ONLY ############    
     elif plot_num == 102:
         plt.close()
+        window = binomial_window(15)
         num_locs = len(res_data_list)
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
         figsize_leg = (1.1,0.8)
-        
         
         # Get EF & BiOp rules
         EFrules = get_EFrules()
@@ -1390,30 +1400,22 @@ for plot_num in plots_to_plot:
         
         # Calculate Baseline
         file_nm = res_data_file
-        
-        # Get flow data and check for violations of Environmental Flows and BiOp
-        data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        num_yrs = np.shape(data1[0])[0]       
-        viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-        
-        data1=[mfx(file_nm[i].replace(file_baseline,file_high), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-        
-        data1=[mfx(file_nm[i].replace(file_baseline,file_high), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-             
-        viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
-        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  
+        baseline = {}
+        for key in SimulatedHistoric:
+            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            num_yrs = np.shape(data1[0])[0]       
+            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
+            baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
                 
         # Calculate baseline-subtracted value
-        window = binomial_window(15)
-        viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)]
-        
         data_to_stack = []
         for key in scenarios:
             data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            num_yrs = np.shape(data1[0])[0]       
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
-            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
+            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
+            if key == baseline_case:
+                viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
 
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
         data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
@@ -1443,7 +1445,11 @@ for plot_num in plots_to_plot:
         file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
-        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
+        EFlats_tweaked = EFlats
+        EFlats_tweaked[7] = EFlats_tweaked[7] - 0.05
+        EFlats_tweaked[6] = EFlats_tweaked[6] - 0.03
+        write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
+                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
        
 
 ##############################################################################
@@ -1451,11 +1457,11 @@ for plot_num in plots_to_plot:
 ############  BiOp & Env Flows w mini figs NOT SUMMER  ############    
     elif plot_num == 103:
         plt.close()
+        window = binomial_window(15)
         num_locs = len(res_data_list)
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
-        figsize_leg = (1.1,0.8)
-        
+        figsize_leg = (1.1,0.8)        
         
         # Get EF & BiOp rules
         EFrules = get_EFrules()
@@ -1465,30 +1471,21 @@ for plot_num in plots_to_plot:
         
         # Calculate Baseline
         file_nm = res_data_file
-        
-        # Get flow data and check for violations of Environmental Flows and BiOp
-        data1=[mfx(file_nm[i], column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        num_yrs = np.shape(data1[0])[0]       
-        viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-        
-        data1=[mfx(file_nm[i].replace(file_baseline,file_high), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols2 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-        
-        data1=[mfx(file_nm[i].replace(file_baseline,file_low), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-        viols3 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # EF violations each year for ea subbasin
-             
-        viols_avg = [(viols1[i]+viols2[i]+viols3[i])/3. for i in range(num_locs)]
-        baseline = [np.mean(viols_avg[i][0:10]) for i in range(num_locs)]  
-                
-        # Calculate baseline-subtracted value
-        window = binomial_window(15)
-        viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)]
+        baseline = {}
+        for key in SimulatedHistoric:
+            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            num_yrs = np.shape(data1[0])[0]       
+            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
+            baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
         
         data_to_stack = []
         for key in scenarios:
             data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+            num_yrs = np.shape(data1[0])[0]       
             viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
-            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[i]) for i in range(num_locs)])  
+            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
+            if key == baseline_case:
+                viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
 
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
         data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
@@ -1518,5 +1515,10 @@ for plot_num in plots_to_plot:
         file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
         graphs = range(num_locs+1); graphs.remove(0)
 
-        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), shp, graphs=graphs)
-       
+        EFlats_tweaked = EFlats
+#        EFlats_tweaked[7] = EFlats_tweaked[7] + 0.03
+        EFlats_tweaked[6] = EFlats_tweaked[6] + 0.03
+        EFlats_tweaked[3] = EFlats_tweaked[3] + 0.03
+        write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
+                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
+
