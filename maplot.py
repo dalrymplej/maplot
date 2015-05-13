@@ -15,7 +15,7 @@ import constants as cst
 import datetime
 from Rectangle import np_rec_calc as nrc
 from compare import compare_rows
-import Image
+from PIL import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from movingaverage import movingaverage, binomial_window,movingaverage_2D
 import math
@@ -520,8 +520,8 @@ figsize=[(0.8,0.6) for i in range(11)]
 figsize.append((0.8,0.6))
 figsize_leg = (0.8,0.6)
 
-subbasins_loop = False 
-reservoirs_loop = True
+subbasins_loop = True 
+reservoirs_loop = False
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 
@@ -551,9 +551,9 @@ if subbasins_loop:
     file_low = '_LowClim_'
 
 #    plots_to_plot = range(4)
-    plots_to_plot.extend([9])
+#    plots_to_plot.extend([9])
 #    plots_to_plot.extend([4,45,5,8,9])
-    #plots_to_plot.extend([45])
+    plots_to_plot.extend([45])
     
 if reservoirs_loop:
 #    plots_to_plot.extend([101,102,103])
