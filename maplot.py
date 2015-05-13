@@ -553,7 +553,7 @@ if subbasins_loop:
 #    plots_to_plot = range(4)
 #    plots_to_plot.extend([9])
 #    plots_to_plot.extend([4,45,5,8,9])
-    plots_to_plot.extend([45])
+    plots_to_plot.extend([0,1,2,3])
     
 if reservoirs_loop:
 #    plots_to_plot.extend([101,102,103])
@@ -607,9 +607,9 @@ for plot_num in plots_to_plot:
         
         colord = np.array(data1_spQ)
         
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
-        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0, c=data1_spQ, cmap=cmap1)#,c=colord,cmap = cmap1)
         
         file_graphics = 'spQ.png'     
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
@@ -660,7 +660,7 @@ for plot_num in plots_to_plot:
        
         colord = np.array(diff_drought_days)
         
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
@@ -703,7 +703,7 @@ for plot_num in plots_to_plot:
        
         colord = np.array(diff_ann_precip)
         
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white'],128)
         WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         
@@ -746,7 +746,7 @@ for plot_num in plots_to_plot:
        
         colord = np.array(diff_winter_temp)
         
-        x,y=WBmap(subbasin_data_lons,subbasin_data_lats)
+        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
         WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
         
