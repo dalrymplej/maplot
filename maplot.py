@@ -19,6 +19,7 @@ from PIL import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from movingaverage import movingaverage, binomial_window,movingaverage_2D
 import math
+import xlrd
 
 
 def get_EFdata():
@@ -520,8 +521,9 @@ figsize=[(0.8,0.6) for i in range(11)]
 figsize.append((0.8,0.6))
 figsize_leg = (0.8,0.6)
 
-subbasins_loop = True 
+subbasins_loop = False 
 reservoirs_loop = False
+correlations_loop = True
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 
@@ -577,6 +579,50 @@ if reservoirs_loop:
     dam_data_list = [DamLocs[key] for key in DamLocs]
     dam_data_lons = [dam_data_list[i][0] for i in range(len(dam_data_list))]
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
+    
+if correlations_loop:
+    
+    # Read a parameter file in xls format.
+    Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
+    Gauge_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
+    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
+    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
+    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
+    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
+    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
+    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
+    R2 = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+    p_value = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
+    
+    num_gauge = len(Q_SWE0)
+    for i in range(num_gauge-1,-1,-1): # count back from end of list
+        c_Longs[i] = -1*c_Longs[i]
+        if SWE_frac[i] < 0.: SWE_frac[i] = 0.
+        if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
+            del(Gauge_num[i])
+            del(Gauge_loc[i])
+            del(c_Lats[i])
+            del(c_Longs[i])
+            del(Q_SWE0[i])
+            del(Delta_Q_SWE1[i])
+            del(Q_SWE1[i])
+            del(R2[i])
+            del(p_value[i])
+            del(SWE_frac[i])
+    num_gauge = len(Q_SWE0)
+    
+    subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
+    subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
+    subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
+    subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
+    subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
+    subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
+    subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
+    subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
+    subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
+    
+    plots_to_plot.extend([201])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1522,3 +1568,53 @@ for plot_num in plots_to_plot:
         write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
                   shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
 
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Correlations of discharge to SWE  ############    
+
+    elif plot_num == 201:
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.close()
+        
+#    Gauge_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
+#    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
+#    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
+#    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
+#    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
+#    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
+#    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
+#    R2 = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+#    p_value = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+        num_gauge
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        plt.title("Summer Discharge - Apr 1 SWE correlation")
+        
+        import heapq
+        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1)[1]  #find second-largest number
+        data1_size = np.clip(200.*np.array(Q_SWE1)/data1_2nd_lgst,3.,20000.)
+        
+        
+        colord = np.array(SWE_frac)
+        
+        x,y=WBmap(c_Longs,c_Lats)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge is increased by median Apr 1 SWE')
+        
+        file_graphics = 'Q_Apr1SWE_correlations.png'     
+        plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
+                verticalalignment='top')        
+        #plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.close()       
