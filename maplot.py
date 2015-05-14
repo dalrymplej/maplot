@@ -591,26 +591,63 @@ if correlations_loop:
     Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
     Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
     Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
-    R2 = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
-    p_value = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
     SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
     
+    Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
+    Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
+    Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(19)[1:]
+    R2_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(20)[1:]
+    p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
+    PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
+    
     num_gauge = len(Q_SWE0)
+    c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
+    c_Longs_SWE = list(c_Longs)
     for i in range(num_gauge-1,-1,-1): # count back from end of list
-        c_Longs[i] = -1*c_Longs[i]
+        c_Longs_SWE[i] = -1*c_Longs_SWE[i]
         if SWE_frac[i] < 0.: SWE_frac[i] = 0.
         if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
-            del(Gauge_num[i])
-            del(Gauge_loc[i])
-            del(c_Lats[i])
-            del(c_Longs[i])
+            del(c_Lats_SWE[i])
+            del(c_Longs_SWE[i])
             del(Q_SWE0[i])
             del(Delta_Q_SWE1[i])
             del(Q_SWE1[i])
-            del(R2[i])
-            del(p_value[i])
+            del(R2_SWE[i])
+            del(p_value_SWE[i])
             del(SWE_frac[i])
-    num_gauge = len(Q_SWE0)
+    num_gauge_SWE = len(Q_SWE0)
+    
+    c_Lats_PRE = list(c_Lats)
+    c_Longs_PRE = list(c_Longs)
+    for i in range(num_gauge-1,-1,-1): # count back from end of list
+        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
+        if PRE_frac[i] < 0.: PRE_frac[i] = 0.
+        if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
+            del(c_Lats_PRE[i])
+            del(c_Longs_PRE[i])
+            del(Q_PRE0[i])
+            del(Delta_Q_PRE1[i])
+            del(Q_PRE1[i])
+            del(R2_PRE[i])
+            del(p_value_PRE[i])
+            del(PRE_frac[i])
+    num_gauge_PRE = len(Q_PRE0)
+    
+    significance_cutoff = 0.4
+    Q_SWE1_sig = list(Q_SWE1)
+    SWE_frac_sig = list(SWE_frac)
+    for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
+        if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
+            SWE_frac_sig[i] = 0.
+    Q_PRE1_sig = Q_PRE1
+    PRE_frac_sig = PRE_frac
+    for i in range(num_gauge_PRE-1,-1,-1): # count back from end of list
+        if p_value_PRE[i] > significance_cutoff:   # zero out parts of list that are not significant
+            PRE_frac_sig[i] = 0.
+
+    SWEPRE_range = SWE_frac_sig + PRE_frac_sig
     
     subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
     subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
@@ -622,7 +659,7 @@ if correlations_loop:
     subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
     subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
     
-    plots_to_plot.extend([201])
+    plots_to_plot.extend([201,202])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -640,22 +677,26 @@ for plot_num in plots_to_plot:
         im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Specific Discharge")
+        plt.title("Specific Discharge & Jul - Aug Discharge")
         file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
         data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
-        summer_Q = [nrc(data1[i],[1,260],[88,350]) for i in range(12)]
+        summer_Q = [nrc(data1[i],[1,273],[88,335]) for i in range(12)]  # Start of summer = day 260, end = day 350
         
         import heapq
         data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
-        data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,30.,20000.)
+        data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,15.,20000.)
         
         colord = np.array(data1_spQ)
         
         x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
-        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('annual specific discharge (cm/y)',size=10)
+        cbar.ax.tick_params(labelsize=9) 
         
         file_graphics = 'spQ.png'     
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,
@@ -1577,7 +1618,7 @@ for plot_num in plots_to_plot:
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
         
-        num_gauge
+        num_gauge_sig = len(Q_SWE1_sig)
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
@@ -1587,17 +1628,17 @@ for plot_num in plots_to_plot:
         plt.title("Jul - Aug Discharge & Apr 1 SWE")
         
         import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_SWE1)/data1_2nd_lgst,10.,20000.)
+        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_SWE1_sig)/data1_2nd_lgst,10.,20000.)
         
-        colord = np.array(SWE_frac)
+        colord = np.array(SWE_frac_sig)
         
-        x,y=WBmap(c_Longs,c_Lats)
+        x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
         startcolor = 'blue'
         midcolor1 = 'red'
         endcolor = 'black' #'#4C0000'
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
         # add colorbar.
         cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
         cbar.set_label('fraction discharge increase with median Apr 1 SWE',size=10)
@@ -1609,3 +1650,46 @@ for plot_num in plots_to_plot:
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()       
+        
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Correlations of discharge to PRECIP  ############    
+
+    elif plot_num == 202:
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        
+        num_gauge_sig = len(Q_PRE1_sig)
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        plt.title("Jul - Aug Discharge & Feb - Apr Precip")
+        
+        import heapq
+        data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
+        
+        colord = np.array(PRE_frac_sig)
+        
+        x,y=WBmap(c_Longs_PRE,c_Lats_PRE)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
+        cbar.ax.tick_params(labelsize=9) 
+        
+        file_graphics = 'Q_Feb-AprPrecip_correlations.png'     
+        plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
+                verticalalignment='top')        
+        #plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+        plt.close()       
+
