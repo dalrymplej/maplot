@@ -1575,17 +1575,8 @@ for plot_num in plots_to_plot:
     elif plot_num == 201:
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
-        plt.close()
+        plt.axes(frameon=False)
         
-#    Gauge_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
-#    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
-#    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
-#    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
-#    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
-#    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
-#    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
-#    R2 = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
-#    p_value = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
         num_gauge
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
@@ -1593,12 +1584,11 @@ for plot_num in plots_to_plot:
         im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Summer Discharge - Apr 1 SWE correlation")
+        plt.title("Jul - Aug Discharge & Apr 1 SWE")
         
         import heapq
         data1_2nd_lgst = heapq.nlargest(2, Q_SWE1)[1]  #find second-largest number
-        data1_size = np.clip(200.*np.array(Q_SWE1)/data1_2nd_lgst,3.,20000.)
-        
+        data1_size = np.clip(500.*np.array(Q_SWE1)/data1_2nd_lgst,10.,20000.)
         
         colord = np.array(SWE_frac)
         
@@ -1609,12 +1599,13 @@ for plot_num in plots_to_plot:
         cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
         m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
         # add colorbar.
-        cbar = WBmap.colorbar(m,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge is increased by median Apr 1 SWE')
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge increase with median Apr 1 SWE',size=10)
+        cbar.ax.tick_params(labelsize=9) 
         
         file_graphics = 'Q_Apr1SWE_correlations.png'     
         plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()       
