@@ -20,7 +20,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from movingaverage import movingaverage, binomial_window,movingaverage_2D
 import math
 import xlrd
-
+from scipy import stats
 
 def get_EFdata():
     """ Returns tuple of data"""
@@ -480,8 +480,8 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
     
     WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                 urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-#        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
-    im = plt.imread('C:\\code\\maplot\\ElevationMap_lt.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+    im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
     WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
     WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
     
@@ -526,6 +526,11 @@ reservoirs_loop = False
 correlations_loop = True
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
+file_baseline = '_Ref_'
+baseline_case = 'Reference'
+file_high = '_Extreme_'
+file_low = '_LowClim_'
+file_historical = '_HistoricRef_'
 
 plots_to_plot = []
 
@@ -547,10 +552,6 @@ if subbasins_loop:
     lats = subbasin_data_lats
 #    lats.append(43.9)
     lats.append(45.55)
-    file_baseline = '_Ref_'
-    baseline_case = 'Reference'
-    file_high = '_Extreme_'
-    file_low = '_LowClim_'
 
 #    plots_to_plot = range(4)
 #    plots_to_plot.extend([9])
@@ -659,7 +660,7 @@ if correlations_loop:
     subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
     subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
     
-    plots_to_plot.extend([201,202])
+    plots_to_plot.extend([204])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -674,7 +675,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Specific Discharge & Jul - Aug Discharge")
@@ -713,7 +714,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
@@ -768,7 +769,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
@@ -811,7 +812,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         
@@ -1622,7 +1623,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Apr 1 SWE")
@@ -1664,7 +1665,7 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_hi-res.png')
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Feb - Apr Precip")
@@ -1693,3 +1694,66 @@ for plot_num in plots_to_plot:
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()       
 
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Correlations of discharge to PRECIP  ############    
+
+    elif plot_num == 204:
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+#        c_Longs_model
+#        c_Lats_model
+        scenario = file_historical
+        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
+        file_nm_WBSWE = data_path + 'Snow_(mm)'+scenario+'Run0.csv'
+        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        num_yrs = np.shape(data1[0])[0]
+        shft = 365 - cst.day_of_year_oct1
+        jul1 = cst.day_of_year_jul1 + shft
+        aug31 = cst.day_of_year_aug31 + shft
+        first_day = jul1
+        last_day = aug31
+        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(12)]  # Start of summer = day 260, end = day 350
+        data1=mfx(file_nm_WBSWE,column=1,skip=cst.day_of_year_oct1)
+        apr1 = cst.day_of_year_apr1 + shft
+        Apr1_SWE_by_yr = [nrc(data1,[j,apr1],[j,apr1]) for j in range(num_yrs)] 
+        Apr1_SWE_by_yr_norm = np.array(Apr1_SWE_by_yr)/np.median(Apr1_SWE_by_yr)  # normalized SWE to median Apr 1
+        regression_stats = [stats.linregress(Apr1_SWE_by_yr_norm,summer_Q_by_yr[i]) for i in range(12)]
+        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+        Q_SWE1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(12)]
+        print Q_SWE1_sig
+        SWE_frac1 = [regression_stats[i][0]/Q_SWE1_sig[i] for i in range(12)]
+        assert False
+
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
+        
+        import heapq
+        data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
+        
+        colord = np.array(PRE_frac_sig)
+        
+        x,y=WBmap(c_Longs_model,c_Lats_model)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
+        cbar.ax.tick_params(labelsize=9) 
+        
+        file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+        #plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+        plt.close()      
