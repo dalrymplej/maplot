@@ -1661,7 +1661,8 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Apr 1 SWE")
@@ -1703,7 +1704,8 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Feb - Apr Precip")
@@ -1772,7 +1774,8 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Apr 1 SWE Model")
@@ -1842,7 +1845,8 @@ for plot_num in plots_to_plot:
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
         plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
@@ -1896,42 +1900,44 @@ for plot_num in plots_to_plot:
         c_Longs_Temps = []
         for i in range(num_Q_full):
             for j in range(num_gauge):
-                if Q_pandas[i].index.name == c_Lats[j]:
-                    Q_Temps.append(np.array(Q_pandas[i]))
+                if Q_pandas[i].name == Gauge_num[j]:
+                    Q_Temps.append(np.array(Q_pandas[i][:-8]))
                     c_Lats_Temps.append(c_Lats[j])
-                    c_Longs_Temps.append(c_Longs[j])
+                    c_Longs_Temps.append(-1*c_Longs[j])
  
+        spring_Temp_by_yr_norm = (np.array(spring_Temp_by_yr) - np.ones_like(spring_Temp_by_yr)*spring_Temp_avg)/\
+                                    (np.max(spring_Temp_by_yr) - np.average(spring_Temp_by_yr))   # normalize spring temps
         regression_stats = [stats.linregress(spring_Temp_by_yr,Q_Temps[i]) for i in range(num_Q_full)]
-        assert False
+#       regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
         # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
-        Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
-        Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
+        Q_Temp1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_Q_full)]
+        Temp_frac1 = [regression_stats[i][0]/Q_Temp1_sig[i] for i in range(num_Q_full)]
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
+        plt.title("Jul - Aug Discharge & Feb - Apr Temperature")
         
         import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_Precip1_sig)/data1_2nd_lgst,10.,20000.)
+        data1_2nd_lgst = heapq.nlargest(2, Q_Temp1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_Temp1_sig)/data1_2nd_lgst,10.,20000.)
         
-        colord = np.array(Precip_frac1)
+        colord = np.array(Temp_frac1)
         
-        x,y=WBmap(c_Longs_model,c_Lats_model)
-        startcolor = 'blue'
-        midcolor1 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+        x,y=WBmap(c_Longs_Temps,c_Lats_Temps)
+        startcolor = 'red'
+#        midcolor1 = 'red'
+        endcolor = 'blue' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=-0.10,vmax=0.05)
         # add colorbar.
         cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with avg Feb - Apr Precip',size=10)
+        cbar.set_label('fraction discharge decrease with maximum Feb - Apr Temp',size=10)
         cbar.ax.tick_params(labelsize=9) 
         
-        file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
+        file_graphics = 'Q_Feb-AprTemp_correlations.png'     
         plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
