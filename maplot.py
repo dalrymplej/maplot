@@ -47,7 +47,20 @@ def get_EFdata():
             }
             
     return EFdata, DamLocs
-    
+
+def get_gauge_info():
+    """return list of lists containing file name & gauge number"""
+    gauge_info = [
+    ["Willamette_at_Portland_(m3_s)",14211720],
+    ["Willamette_at_Salem_(m3_s)",14191000],
+    ["Willamette_at_Harrisburg_(m3_s)",14166000],
+    ["Johnson_at_Milwaukee_(m3_s)",14211550],
+    ["Lookout_(m3_s)",14161500],
+    ["Mckenzie_at_Walterville_(m3_s)",14163900],
+    ["Mckenzie_Belknap_(m3_s)",14158850],
+    ["Mckenzie_Clear_Lake_(m3_s)",14158500]
+    ]
+    return gauge_info
     
 def get_EFrules():
     """ Write rules for each location
@@ -606,8 +619,14 @@ if correlations_loop:
     num_gauge = len(Q_SWE0)
     c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
     c_Longs_SWE = list(c_Longs)
+    gauge_info_csv = get_gauge_info()
+    num_gauge_csv = len(gauge_info_csv)
     for i in range(num_gauge-1,-1,-1): # count back from end of list
         c_Longs_SWE[i] = -1*c_Longs_SWE[i]
+        for j in range(num_gauge_csv):
+            if gauge_info_csv[j][1] == Gauge_num[i]:
+                gauge_info_csv[j].extend([Gauge_loc[i],c_Lats[i],-1*c_Longs[i]])
+                
         if SWE_frac[i] < 0.: SWE_frac[i] = 0.
         if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
             del(c_Lats_SWE[i])
@@ -619,6 +638,10 @@ if correlations_loop:
             del(p_value_SWE[i])
             del(SWE_frac[i])
     num_gauge_SWE = len(Q_SWE0)
+    for j in range(num_gauge_csv-1,-1,-1):
+        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
+            del(gauge_info_csv[j])
+    num_gauge_csv = len(gauge_info_csv)
     
     c_Lats_PRE = list(c_Lats)
     c_Longs_PRE = list(c_Longs)
@@ -635,6 +658,7 @@ if correlations_loop:
             del(p_value_PRE[i])
             del(PRE_frac[i])
     num_gauge_PRE = len(Q_PRE0)
+    
     
     significance_cutoff = 0.4
     Q_SWE1_sig = list(Q_SWE1)
@@ -660,7 +684,9 @@ if correlations_loop:
     subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
     subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
     
-    plots_to_plot.extend([204])
+    c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
+    c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
+    plots_to_plot.extend([203,204])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1694,20 +1720,26 @@ for plot_num in plots_to_plot:
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()       
 
+        
 ##############################################################################
 #  SNOW and PRECIP CORRELATIONS        
-############  Correlations of discharge to PRECIP  ############    
+############  Correlations of discharge to SNOW  ############    
 
-    elif plot_num == 204:
+    elif plot_num == 203:
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
-#        c_Longs_model
-#        c_Lats_model
         scenario = file_historical
         file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
         file_nm_WBSWE = data_path + 'Snow_(mm)'+scenario+'Run0.csv'
-        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
+        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
+        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
+        for j in range(num_gauge_csv): 
+            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
+            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
+            c_Lats_model.append(gauge_info_csv[j][3])
+            c_Longs_model.append(gauge_info_csv[j][4])
         data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
         num_yrs = np.shape(data1[0])[0]
         shft = 365 - cst.day_of_year_oct1
@@ -1715,31 +1747,29 @@ for plot_num in plots_to_plot:
         aug31 = cst.day_of_year_aug31 + shft
         first_day = jul1
         last_day = aug31
-        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(12)]  # Start of summer = day 260, end = day 350
-        data1=mfx(file_nm_WBSWE,column=1,skip=cst.day_of_year_oct1)
+        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
+        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
+        data1=mfx(file_nm_WBSWE,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
         apr1 = cst.day_of_year_apr1 + shft
         Apr1_SWE_by_yr = [nrc(data1,[j,apr1],[j,apr1]) for j in range(num_yrs)] 
         Apr1_SWE_by_yr_norm = np.array(Apr1_SWE_by_yr)/np.median(Apr1_SWE_by_yr)  # normalized SWE to median Apr 1
-        regression_stats = [stats.linregress(Apr1_SWE_by_yr_norm,summer_Q_by_yr[i]) for i in range(12)]
+        regression_stats = [stats.linregress(Apr1_SWE_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
         # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
-        Q_SWE1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(12)]
-        print Q_SWE1_sig
-        SWE_frac1 = [regression_stats[i][0]/Q_SWE1_sig[i] for i in range(12)]
-        assert False
-
+        Q_SWE1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
+        SWE_frac1 = [regression_stats[i][0]/Q_SWE1_sig[i] for i in range(num_records)]
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
         im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
+        plt.title("Jul - Aug Discharge & Apr 1 SWE Model")
         
         import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
+        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_SWE1_sig)/data1_2nd_lgst,10.,20000.)
         
-        colord = np.array(PRE_frac_sig)
+        colord = np.array(SWE_frac1)
         
         x,y=WBmap(c_Longs_model,c_Lats_model)
         startcolor = 'blue'
@@ -1749,7 +1779,148 @@ for plot_num in plots_to_plot:
         m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
         # add colorbar.
         cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
+        cbar.set_label('fraction discharge increase with avg F',size=10)
+        cbar.ax.tick_params(labelsize=9) 
+        
+        file_graphics = 'Q_Apr1SWE_correlations_model.png'     
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+        #plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+        plt.close()   
+        
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Correlations of discharge to Precip  ############    
+
+    elif plot_num == 204:
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        scenario = file_historical
+        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
+        file_nm_WBPrecip = data_path + 'Climate'+scenario+'Run0.csv'
+        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+        c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
+        c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
+        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
+        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
+        for j in range(num_gauge_csv): 
+            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
+            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
+            c_Lats_model.append(gauge_info_csv[j][3])
+            c_Longs_model.append(gauge_info_csv[j][4])
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        num_yrs = np.shape(data1[0])[0]
+        shft = 365 - cst.day_of_year_oct1
+        jul1 = cst.day_of_year_jul1 + shft
+        aug31 = cst.day_of_year_aug31 + shft
+        first_day = jul1
+        last_day = aug31
+        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
+        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
+        data1=mfx(file_nm_WBPrecip,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
+        feb1  = cst.day_of_year_feb1 + shft
+        apr30 = cst.day_of_year_apr30 + shft
+        spring_Precip_by_yr = [nrc(data1,[j,feb1],[j,apr30]) for j in range(num_yrs)] 
+        spring_Precip_by_yr_norm = np.array(spring_Precip_by_yr)/np.median(spring_Precip_by_yr)  # normalized SWE to median Apr 1
+        regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+        Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
+        Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
+        
+        import heapq
+        data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_Precip1_sig)/data1_2nd_lgst,10.,20000.)
+        
+        colord = np.array(Precip_frac1)
+        
+        x,y=WBmap(c_Longs_model,c_Lats_model)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge increase with avg Feb - Apr Precip',size=10)
+        cbar.ax.tick_params(labelsize=9) 
+        
+        file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
+        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+        #plt.show()
+        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+        plt.close()      
+
+
+##############################################################################
+#  TEMPERATURE CORRELATIONS        
+############  Correlations of discharge to Precip  ############    
+
+    elif plot_num == 204:
+        fig = plt.figure(figsize=(6,8))
+        ax2 = fig.add_axes()
+        plt.axes(frameon=False)
+        scenario = file_historical
+        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
+        file_nm_WBPrecip = data_path + 'Climate'+scenario+'Run0.csv'
+        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+        c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
+        c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
+        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
+        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
+        for j in range(num_gauge_csv): 
+            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
+            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
+            c_Lats_model.append(gauge_info_csv[j][3])
+            c_Longs_model.append(gauge_info_csv[j][4])
+        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+        num_yrs = np.shape(data1[0])[0]
+        shft = 365 - cst.day_of_year_oct1
+        jul1 = cst.day_of_year_jul1 + shft
+        aug31 = cst.day_of_year_aug31 + shft
+        first_day = jul1
+        last_day = aug31
+        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
+        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
+        data1=mfx(file_nm_WBPrecip,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
+        feb1  = cst.day_of_year_feb1 + shft
+        apr30 = cst.day_of_year_apr30 + shft
+        spring_Precip_by_yr = [nrc(data1,[j,feb1],[j,apr30]) for j in range(num_yrs)] 
+        spring_Precip_by_yr_norm = np.array(spring_Precip_by_yr)/np.median(spring_Precip_by_yr)  # normalized SWE to median Apr 1
+        regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+        Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
+        Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
+        
+        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
+        
+        import heapq
+        data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
+        data1_size = np.clip(500.*np.array(Q_Precip1_sig)/data1_2nd_lgst,10.,20000.)
+        
+        colord = np.array(Precip_frac1)
+        
+        x,y=WBmap(c_Longs_model,c_Lats_model)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+        # add colorbar.
+        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+        cbar.set_label('fraction discharge increase with avg Feb - Apr Precip',size=10)
         cbar.ax.tick_params(labelsize=9) 
         
         file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
