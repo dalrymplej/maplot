@@ -620,8 +620,13 @@ if correlations_loop:
     df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
     df = df.convert_objects(convert_numeric=True)
     Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
+    Q_pandas = [Q_pandas[i][:-1] for i in range(39)]
+    for i in range(38,-1,-1):
+        num_nulls = Q_pandas[i].isnull().sum()
+        if Q_pandas[i].isnull().sum() > 0: 
+            del Q_pandas[i]
+    num_Q_full = len(Q_pandas)
     
- 
     num_gauge = len(Q_SWE0)
     c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
     c_Longs_SWE = list(c_Longs)
@@ -1880,31 +1885,24 @@ for plot_num in plots_to_plot:
         start_yr, end_yr, tmin = mfx(file_nm_temp,column=2,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
         tmin = tmin/10.
         tavg = (tmax + tmin)/2.
-        assert False
-        c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
-        c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
-        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
-        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
-        for j in range(num_gauge_csv): 
-            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
-            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
-            c_Lats_model.append(gauge_info_csv[j][3])
-            c_Longs_model.append(gauge_info_csv[j][4])
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        num_yrs = np.shape(data1[0])[0]
         shft = 365 - cst.day_of_year_oct1
-        jul1 = cst.day_of_year_jul1 + shft
-        aug31 = cst.day_of_year_aug31 + shft
-        first_day = jul1
-        last_day = aug31
-        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
-        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
-        data1=mfx(file_nm_WBPrecip,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
-        feb1  = cst.day_of_year_feb1 + shft
+        feb1 =  cst.day_of_year_feb1  + shft
         apr30 = cst.day_of_year_apr30 + shft
-        spring_Precip_by_yr = [nrc(data1,[j,feb1],[j,apr30]) for j in range(num_yrs)] 
-        spring_Precip_by_yr_norm = np.array(spring_Precip_by_yr)/np.median(spring_Precip_by_yr)  # normalized SWE to median Apr 1
-        regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+        num_yrs = 2006 - 1979 + 1
+        spring_Temp_avg = nrc(tavg,[0,feb1],[58,apr30]) 
+        spring_Temp_by_yr = [nrc(tavg,[j,feb1],[j,apr30]) for j in range(1979-start_yr,2006+1-start_yr)]
+        Q_Temps = []
+        c_Lats_Temps = []
+        c_Longs_Temps = []
+        for i in range(num_Q_full):
+            for j in range(num_gauge):
+                if Q_pandas[i].index.name == c_Lats[j]:
+                    Q_Temps.append(np.array(Q_pandas[i]))
+                    c_Lats_Temps.append(c_Lats[j])
+                    c_Longs_Temps.append(c_Longs[j])
+ 
+        regression_stats = [stats.linregress(spring_Temp_by_yr,Q_Temps[i]) for i in range(num_Q_full)]
+        assert False
         # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
         Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
         Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
