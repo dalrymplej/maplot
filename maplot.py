@@ -21,6 +21,7 @@ from movingaverage import movingaverage, binomial_window,movingaverage_2D
 import math
 import xlrd
 from scipy import stats
+import pandas as pd
 
 def get_EFdata():
     """ Returns tuple of data"""
@@ -616,6 +617,11 @@ if correlations_loop:
     p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
     PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
     
+    df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
+    df = df.convert_objects(convert_numeric=True)
+    Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
+    
+ 
     num_gauge = len(Q_SWE0)
     c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
     c_Longs_SWE = list(c_Longs)
@@ -686,7 +692,8 @@ if correlations_loop:
     
     c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
     c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
-    plots_to_plot.extend([203,204])
+    
+    plots_to_plot.extend([205])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1861,16 +1868,19 @@ for plot_num in plots_to_plot:
 
 ##############################################################################
 #  TEMPERATURE CORRELATIONS        
-############  Correlations of discharge to Precip  ############    
+############  Correlations of discharge to Temperature  ############    
 
-    elif plot_num == 204:
+    elif plot_num == 205:
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
-        scenario = file_historical
-        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
-        file_nm_WBPrecip = data_path + 'Climate'+scenario+'Run0.csv'
-        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+        file_nm_temp = 'C:\\code\\maplot\\' + 'Temperature.csv'
+        start_yr, end_yr, tmax = mfx(file_nm_temp,column=1,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
+        tmax = tmax/10.
+        start_yr, end_yr, tmin = mfx(file_nm_temp,column=2,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
+        tmin = tmin/10.
+        tavg = (tmax + tmin)/2.
+        assert False
         c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
         c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
         c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
