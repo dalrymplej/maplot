@@ -671,7 +671,7 @@ if correlations_loop:
     num_gauge_PRE = len(Q_PRE0)
     
     
-    significance_cutoff = 0.4
+    significance_cutoff = 0.1
     Q_SWE1_sig = list(Q_SWE1)
     SWE_frac_sig = list(SWE_frac)
     for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
@@ -698,7 +698,7 @@ if correlations_loop:
     c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
     c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
     
-    plots_to_plot.extend([205])
+    plots_to_plot.extend([201, 202, 205])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1736,7 +1736,7 @@ for plot_num in plots_to_plot:
 
         
 ##############################################################################
-#  SNOW and PRECIP CORRELATIONS        
+#  SNOW and PRECIP CORRELATIONS        MODEL
 ############  Correlations of discharge to SNOW  ############    
 
     elif plot_num == 203:
@@ -1804,7 +1804,7 @@ for plot_num in plots_to_plot:
         plt.close()   
         
 ##############################################################################
-#  SNOW and PRECIP CORRELATIONS        
+#  SNOW and PRECIP CORRELATIONS             MODEL      
 ############  Correlations of discharge to Precip  ############    
 
     elif plot_num == 204:
@@ -1883,7 +1883,7 @@ for plot_num in plots_to_plot:
         fig = plt.figure(figsize=(6,8))
         ax2 = fig.add_axes()
         plt.axes(frameon=False)
-        file_nm_temp = 'C:\\code\\maplot\\' + 'Temperature.csv'
+        file_nm_temp = 'C:\\code\\maplot\\' + 'Willamette Basin Monthly temperature 1895 forward.csv'
         start_yr, end_yr, tmax = mfx(file_nm_temp,column=1,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
         tmax = tmax/10.
         start_yr, end_yr, tmin = mfx(file_nm_temp,column=2,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
@@ -1908,10 +1908,18 @@ for plot_num in plots_to_plot:
         spring_Temp_by_yr_norm = (np.array(spring_Temp_by_yr) - np.ones_like(spring_Temp_by_yr)*spring_Temp_avg)/\
                                     (np.max(spring_Temp_by_yr) - np.average(spring_Temp_by_yr))   # normalize spring temps
         regression_stats = [stats.linregress(spring_Temp_by_yr,Q_Temps[i]) for i in range(num_Q_full)]
+
 #       regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
         # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
         Q_Temp1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_Q_full)]
-        Temp_frac1 = [regression_stats[i][0]/Q_Temp1_sig[i] for i in range(num_Q_full)]
+        Temp_frac1 = [-1*regression_stats[i][0]/Q_Temp1_sig[i] for i in range(num_Q_full)]
+        for i in range(num_Q_full-1,-1,-1): # count back from end of list
+            if regression_stats[i][3] > significance_cutoff:   # zero out parts of list that are not significant
+                del(regression_stats[i])
+                del(Q_Temp1_sig[i])
+                del(Temp_frac1[i])
+                del(c_Longs_Temps[i])
+                del(c_Lats_Temps[i])
         
         WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                     urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
@@ -1927,18 +1935,18 @@ for plot_num in plots_to_plot:
         colord = np.array(Temp_frac1)
         
         x,y=WBmap(c_Longs_Temps,c_Lats_Temps)
-        startcolor = 'red'
-#        midcolor1 = 'red'
-        endcolor = 'blue' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=-0.10,vmax=0.05)
+        startcolor = 'blue'
+        midcolor1 = 'red'
+        endcolor = 'black' #'#4C0000'
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1, endcolor],128)
+        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0.,vmax=1.)
         # add colorbar.
         cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge decrease with maximum Feb - Apr Temp',size=10)
+        cbar.set_label('fraction discharge decrease with warmest avg Feb - Apr temps',size=10)
         cbar.ax.tick_params(labelsize=9) 
         
         file_graphics = 'Q_Feb-AprTemp_correlations.png'     
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+        plt.text(0., 0, get_metadata(file_nm_temp), fontsize=3,verticalalignment='top')        
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()      
