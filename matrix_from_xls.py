@@ -31,7 +31,7 @@ def matrix_from_xls(
     leap_yr -- (str) how to deal with leap years, none or remove (default none)
     read_date_column -- (bool) data contain date col True or False (default False)
     date_column -- (int) column where dates are found (default 0)
-    missing_data_flag -- integer flag for missing data
+    missing_data_flag -- integer flag that identifies missing or bad data (default none)
     """
     
     import numpy as np
@@ -222,7 +222,7 @@ def timeseries(ts,leap_yr='none',missing_data='pad', start_date = 'none', missin
     else:
         print 'leap_yr contains unknown option'
         raise Exception()
-    if missing_data != 'none':  ts = ts.replace(missing_data_flag,np.nan)
+    if missing_data != 'none':  ts = ts.replace(missing_data_flag,np.nan) # replace missing data with NaN
     ts = ts.fillna(method=missing_data)
     if start_date != 'none':
         ts = ts.loc[start_date:]
