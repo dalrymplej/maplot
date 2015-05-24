@@ -22,6 +22,7 @@ import math
 import xlrd
 from scipy import stats
 import pandas as pd
+import imp
 
 def get_EFdata():
     """ Returns tuple of data"""
@@ -596,7 +597,11 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    
+    snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
+    snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
+    snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+    snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
+    print snow_basin_index_doy
     # Read a parameter file in xls format.
     Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
     Gauge_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
