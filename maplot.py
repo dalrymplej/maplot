@@ -523,766 +523,633 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 ###############################################################################
-
-# Map boundaries
-lat_bounds = 43.31342817420548, 45.84870876153576
-long_bounds = -121.401130054521,-124.151784119791
-
-shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
-png_path = 'C:\\code\\maplot pngs\\'
-data_path = 'C:\\code\\maplot data\\'
-
-figsize=[(0.8,0.6) for i in range(11)]
-figsize.append((0.8,0.6))
-figsize_leg = (0.8,0.6)
-
-subbasins_loop = False 
-reservoirs_loop = False
-correlations_loop = True
-
-subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
-file_baseline = '_Ref_'
-baseline_case = 'Reference'
-file_high = '_Extreme_'
-file_low = '_LowClim_'
-file_historical = '_HistoricRef_'
-
-plots_to_plot = []
-
-if subbasins_loop:
+for doyloop in range(1,120):
+    # Map boundaries
+    lat_bounds = 43.31342817420548, 45.84870876153576
+    long_bounds = -121.401130054521,-124.151784119791
     
-    subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
-    subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
-    subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
-    subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
-    subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
-    subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
-    subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
-    subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
-    subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
+    shp = 'C:\\code\\maplot\\shpf\\Sub_Area_gc'
+    png_path = 'C:\\code\\maplot pngs\\'
+    data_path = 'C:\\code\\maplot data\\'
     
-    lons = subbasin_data_lons
-    lons[11]=subbasin_data_lons[11]+0.2
-    lons.append(-123.7)
-    lats = subbasin_data_lats
-#    lats.append(43.9)
-    lats.append(45.55)
-
-#    plots_to_plot = range(4)
-#    plots_to_plot.extend([9])
-#    plots_to_plot.extend([4,45,5,8,9])
-    plots_to_plot.extend([0])
+    figsize=[(0.8,0.6) for i in range(11)]
+    figsize.append((0.8,0.6))
+    figsize_leg = (0.8,0.6)
     
-if reservoirs_loop:
-#    plots_to_plot.extend([101,102,103])
-    plots_to_plot.extend([103])
-
-    EFdata, DamLocs = get_EFdata()
-    res_data_list = [EFdata[key] for key in EFdata]
-    res_data_list = sorted(res_data_list, key=lambda x: x[2])  # order list by number
-    res_data_lons = [res_data_list[i][0] for i in range(len(res_data_list))]
-    res_data_lats = [res_data_list[i][1] for i in range(len(res_data_list))]
-    res_data_order = [res_data_list[i][2] for i in range(len(res_data_list))]
-    res_data_file = [data_path + res_data_list[i][3] for i in range(len(res_data_list))]
-    res_data_EF_col = [res_data_list[i][4] for i in range(len(res_data_list))]
+    subbasins_loop = False 
+    reservoirs_loop = False
+    correlations_loop = True
     
-    EFlons = res_data_lons
-    EFlats = res_data_lats
-    EFlons.append(-123.7)
-#1    EFlats.append(43.9)
-    EFlats.append(45.55)
+    subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
+    file_baseline = '_Ref_'
+    baseline_case = 'Reference'
+    file_high = '_Extreme_'
+    file_low = '_LowClim_'
+    file_historical = '_HistoricRef_'
     
-    dam_data_list = [DamLocs[key] for key in DamLocs]
-    dam_data_lons = [dam_data_list[i][0] for i in range(len(dam_data_list))]
-    dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
+    plots_to_plot = []
     
-if correlations_loop:
-    significance_cutoff = 0.1
-    snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
-    snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
-    gg = imp.load_source('get_avg_discharge_by_moy','C:\\code\\usgs-gauges\\gageroutines.py')    
-    gg = imp.load_source('get_avg_discharge_by_month','C:\\code\\usgs-gauges\\gageroutines.py')    
-    gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')    
-    gg = imp.load_source('reassign_by_yr','C:\\code\usgs-gauges\\gageroutines.py')
-    snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
-    snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
-    snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
-    gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
-    gage_num = []
-    c_Lats = []
-    c_Longs = []
-    Q_SWE0 = []
-    Delta_Q_SWE1 = []
-    Q_SWE1 = []
-    R2_SWE = []
-    p_value_SWE = []
-    SWE_frac = []
-    for gage in gage_list:
-        gage_num_tmp = gage[0]
-        gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
-        moy = 10
-        if moy == 7:
-            mth_name = 'Jul'
-        elif moy == 8:
-            mth_name = 'Aug'
-        elif moy ==9:
-            mth_name = 'Sep'
-        elif moy ==10:
-            mth_name = 'Oct'
-        gage_Aug_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
-        gage_Aug_df = gg.reassign_by_yr(gage_Aug_df)
-        snow_and_gage_df = pd.concat([snow_basin_index,gage_Aug_df],axis=1)
-        snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
-        # slope, intercept, r_value, p_value, std_err
-        regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
-        slope = regression_stats_sg[0]
-        p_value = regression_stats_sg[3]
-        if p_value <= significance_cutoff: 
-            gage_num.append(gage[0])
-            c_Lats.append(gage[1])
-            c_Longs.append(gage[2])
-            Q_SWE0.append(regression_stats_sg[1])
-            Delta_Q_SWE1.append(slope)
-            Q_SWE1.append(slope + regression_stats_sg[1])
-            R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
-            p_value_SWE.append(regression_stats_sg[3])
-            SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-        elif slope < 0.1 and p_value < 0.3: 
-            gage_num.append(gage[0])
-            c_Lats.append(gage[1])
-            c_Longs.append(gage[2])
-            Q_SWE0.append(0.)
-            Delta_Q_SWE1.append(slope)
-            Q_SWE1.append(regression_stats_sg[1])
-            R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
-            p_value_SWE.append(regression_stats_sg[3])
-            SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-    # Read a parameter file in xls format.
-    Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
-#    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
-#    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
-#    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
-#    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
-#    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
-#    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
-#    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
-#    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
-#    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
-#    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
+    if subbasins_loop:
+        
+        subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
+        subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
+        subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
+        subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
+        subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
+        subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
+        subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
+        subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
+        subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
+        
+        lons = subbasin_data_lons
+        lons[11]=subbasin_data_lons[11]+0.2
+        lons.append(-123.7)
+        lats = subbasin_data_lats
+    #    lats.append(43.9)
+        lats.append(45.55)
     
-    Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
-    Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
-    Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(19)[1:]
-    R2_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(20)[1:]
-    p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
-    PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
+    #    plots_to_plot = range(4)
+    #    plots_to_plot.extend([9])
+    #    plots_to_plot.extend([4,45,5,8,9])
+        plots_to_plot.extend([0])
+        
+    if reservoirs_loop:
+    #    plots_to_plot.extend([101,102,103])
+        plots_to_plot.extend([103])
     
-    df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
-    df = df.convert_objects(convert_numeric=True)
-    Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
-    Q_pandas = [Q_pandas[i][:-1] for i in range(39)]
-    for i in range(38,-1,-1):
-        num_nulls = Q_pandas[i].isnull().sum()
-        if Q_pandas[i].isnull().sum() > 0: 
-            del Q_pandas[i]
-    num_Q_full = len(Q_pandas)
+        EFdata, DamLocs = get_EFdata()
+        res_data_list = [EFdata[key] for key in EFdata]
+        res_data_list = sorted(res_data_list, key=lambda x: x[2])  # order list by number
+        res_data_lons = [res_data_list[i][0] for i in range(len(res_data_list))]
+        res_data_lats = [res_data_list[i][1] for i in range(len(res_data_list))]
+        res_data_order = [res_data_list[i][2] for i in range(len(res_data_list))]
+        res_data_file = [data_path + res_data_list[i][3] for i in range(len(res_data_list))]
+        res_data_EF_col = [res_data_list[i][4] for i in range(len(res_data_list))]
+        
+        EFlons = res_data_lons
+        EFlats = res_data_lats
+        EFlons.append(-123.7)
+    #1    EFlats.append(43.9)
+        EFlats.append(45.55)
+        
+        dam_data_list = [DamLocs[key] for key in DamLocs]
+        dam_data_lons = [dam_data_list[i][0] for i in range(len(dam_data_list))]
+        dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
+        
+    if correlations_loop:
+        significance_cutoff = 0.1
+        snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
+        snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
+        gg = imp.load_source('get_avg_discharge_by_moy','C:\\code\\usgs-gauges\\gageroutines.py')    
+        gg = imp.load_source('get_avg_discharge_by_month','C:\\code\\usgs-gauges\\gageroutines.py')    
+        gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')    
+        gg = imp.load_source('reassign_by_yr','C:\\code\usgs-gauges\\gageroutines.py')
+        snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
+        snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+        gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+        gage_num = []
+        c_Lats = []
+        c_Longs = []
+        Q_SWE0 = []
+        Delta_Q_SWE1 = []
+        Q_SWE1 = []
+        R2_SWE = []
+        p_value_SWE = []
+        SWE_frac = []
+        for gage in gage_list:
+            gage_num_tmp = gage[0]
+            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+            moy = 7
+            if moy == 7:
+                mth_name = 'Jul'
+            elif moy == 8:
+                mth_name = 'Aug'
+            elif moy ==9:
+                mth_name = 'Sep'
+            elif moy ==10:
+                mth_name = 'Oct'
+            gage_Aug_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+            gage_Aug_df = gg.reassign_by_yr(gage_Aug_df)
+            snow_and_gage_df = pd.concat([snow_basin_index,gage_Aug_df],axis=1)
+            snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
+            # slope, intercept, r_value, p_value, std_err
+            regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
+            slope = regression_stats_sg[0]
+            p_value = regression_stats_sg[3]
+            if p_value <= significance_cutoff: 
+                gage_num.append(gage[0])
+                c_Lats.append(gage[1])
+                c_Longs.append(gage[2])
+                Q_SWE0.append(regression_stats_sg[1])
+                Delta_Q_SWE1.append(slope)
+                Q_SWE1.append(slope + regression_stats_sg[1])
+                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+                p_value_SWE.append(regression_stats_sg[3])
+                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+            elif slope < 0.1 and p_value < 0.3: 
+                gage_num.append(gage[0])
+                c_Lats.append(gage[1])
+                c_Longs.append(gage[2])
+                Q_SWE0.append(0.)
+                Delta_Q_SWE1.append(slope)
+                Q_SWE1.append(regression_stats_sg[1])
+                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+                p_value_SWE.append(regression_stats_sg[3])
+                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+        # Read a parameter file in xls format.
+        Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
+    #    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
+    #    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
+    #    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
+    #    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
+    #    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
+    #    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
+    #    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
+    #    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+    #    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+    #    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
+        
+        Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
+        Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
+        Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(19)[1:]
+        R2_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(20)[1:]
+        p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
+        PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
+        
+        df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
+        df = df.convert_objects(convert_numeric=True)
+        Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
+        Q_pandas = [Q_pandas[i][:-1] for i in range(39)]
+        for i in range(38,-1,-1):
+            num_nulls = Q_pandas[i].isnull().sum()
+            if Q_pandas[i].isnull().sum() > 0: 
+                del Q_pandas[i]
+        num_Q_full = len(Q_pandas)
+        
+        num_gauge = len(Q_SWE0)
+        c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
+        c_Longs_SWE = list(c_Longs)
+        gauge_info_csv = get_gauge_info()
+        num_gauge_csv = len(gauge_info_csv)
+        for i in range(num_gauge-1,-1,-1): # count back from end of list
+    #        c_Longs_SWE[i] = c_Longs_SWE[i]
+            for j in range(num_gauge_csv):
+                if gauge_info_csv[j][1] == gage_num[i]:
+                    gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
+                    
+            if SWE_frac[i] < 0.: SWE_frac[i] = 0.
+            if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
+                del(c_Lats_SWE[i])
+                del(c_Longs_SWE[i])
+                del(Q_SWE0[i])
+                del(Delta_Q_SWE1[i])
+                del(Q_SWE1[i])
+                del(R2_SWE[i])
+                del(p_value_SWE[i])
+                del(SWE_frac[i])
+        num_gauge_SWE = len(Q_SWE0)
+    #    for j in range(num_gauge_csv-1,-1,-1):
+    #        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
+    #            del(gauge_info_csv[j])
+    #    num_gauge_csv = len(gauge_info_csv)
+        
+        c_Lats_PRE = list(c_Lats)
+        c_Longs_PRE = list(c_Longs)
+        for i in range(num_gauge-1,-1,-1): # count back from end of list
+    #        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
+            if PRE_frac[i] < 0.: PRE_frac[i] = 0.
+            if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
+                del(c_Lats_PRE[i])
+                del(c_Longs_PRE[i])
+                del(Q_PRE0[i])
+                del(Delta_Q_PRE1[i])
+                del(Q_PRE1[i])
+                del(R2_PRE[i])
+                del(p_value_PRE[i])
+                del(PRE_frac[i])
+        num_gauge_PRE = len(Q_PRE0)
+        
+        
+        Q_SWE1_sig = list(Q_SWE1)
+        SWE_frac_sig = list(SWE_frac)
+        for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
+            if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
+                SWE_frac_sig[i] = 0.
+        Q_PRE1_sig = Q_PRE1
+        PRE_frac_sig = PRE_frac
+        for i in range(num_gauge_PRE-1,-1,-1): # count back from end of list
+            if p_value_PRE[i] > significance_cutoff:   # zero out parts of list that are not significant
+                PRE_frac_sig[i] = 0.
     
-    num_gauge = len(Q_SWE0)
-    c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
-    c_Longs_SWE = list(c_Longs)
-    gauge_info_csv = get_gauge_info()
-    num_gauge_csv = len(gauge_info_csv)
-    for i in range(num_gauge-1,-1,-1): # count back from end of list
-#        c_Longs_SWE[i] = c_Longs_SWE[i]
-        for j in range(num_gauge_csv):
-            if gauge_info_csv[j][1] == gage_num[i]:
-                gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
-                
-        if SWE_frac[i] < 0.: SWE_frac[i] = 0.
-        if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
-            del(c_Lats_SWE[i])
-            del(c_Longs_SWE[i])
-            del(Q_SWE0[i])
-            del(Delta_Q_SWE1[i])
-            del(Q_SWE1[i])
-            del(R2_SWE[i])
-            del(p_value_SWE[i])
-            del(SWE_frac[i])
-    num_gauge_SWE = len(Q_SWE0)
-#    for j in range(num_gauge_csv-1,-1,-1):
-#        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
-#            del(gauge_info_csv[j])
-#    num_gauge_csv = len(gauge_info_csv)
+        SWEPRE_range = SWE_frac_sig + PRE_frac_sig
+        
+        subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
+        subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
+        subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
+        subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
+        subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
+        subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
+        subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
+        subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
+        subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
+        
+        c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
+        c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
+        
+        plots_to_plot.extend([201])
+        
     
-    c_Lats_PRE = list(c_Lats)
-    c_Longs_PRE = list(c_Longs)
-    for i in range(num_gauge-1,-1,-1): # count back from end of list
-#        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
-        if PRE_frac[i] < 0.: PRE_frac[i] = 0.
-        if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
-            del(c_Lats_PRE[i])
-            del(c_Longs_PRE[i])
-            del(Q_PRE0[i])
-            del(Delta_Q_PRE1[i])
-            del(Q_PRE1[i])
-            del(R2_PRE[i])
-            del(p_value_PRE[i])
-            del(PRE_frac[i])
-    num_gauge_PRE = len(Q_PRE0)
+    print 'Plots to be plotted are:', '\t', plots_to_plot
+    for plot_num in plots_to_plot:
+        
+        
+    ############  Specific Discharge ############    
+        if plot_num == 0: 
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title("Specific Discharge & Jul - Aug Discharge")
+            file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
+            data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
+            data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+            data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
+            summer_Q = [nrc(data1[i],[1,273],[88,335]) for i in range(12)]  # Start of summer = day 260, end = day 350
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
+            data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,15.,20000.)
+            
+            colord = np.array(data1_spQ)
+            
+            x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('annual specific discharge (cm/y)',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            
+            file_graphics = 'spQ.png'     
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+            plt.close()       
+            
+    ############  Summer Hydrologic Drought ############    
+        elif plot_num == 1:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            
+            plt.title("Change in Summer Hydrologic Drought")
+            
+            file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
     
-    
-    Q_SWE1_sig = list(Q_SWE1)
-    SWE_frac_sig = list(SWE_frac)
-    for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
-        if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
-            SWE_frac_sig[i] = 0.
-    Q_PRE1_sig = Q_PRE1
-    PRE_frac_sig = PRE_frac
-    for i in range(num_gauge_PRE-1,-1,-1): # count back from end of list
-        if p_value_PRE[i] > significance_cutoff:   # zero out parts of list that are not significant
-            PRE_frac_sig[i] = 0.
-
-    SWEPRE_range = SWE_frac_sig + PRE_frac_sig
-    
-    subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
-    subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
-    subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
-    subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
-    subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
-    subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
-    subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
-    subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
-    subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
-    
-    c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
-    c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
-    
-    plots_to_plot.extend([201])
-    
-
-print 'Plots to be plotted are:', '\t', plots_to_plot
-for plot_num in plots_to_plot:
-    
-    
-############  Specific Discharge ############    
-    if plot_num == 0: 
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Specific Discharge & Jul - Aug Discharge")
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
-        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data1_spQ=[np.mean(data1[i])/subbasin_data_area[i]*cst.seconds_in_yr*100. for i in range(12)]
-        summer_Q = [nrc(data1[i],[1,273],[88,335]) for i in range(12)]  # Start of summer = day 260, end = day 350
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, summer_Q)[1]  #find second-largest number
-        data1_size = np.clip(200.*np.array(summer_Q)/data1_2nd_lgst,15.,20000.)
-        
-        colord = np.array(data1_spQ)
-        
-        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','blue'],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('annual specific discharge (cm/y)',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'spQ.png'     
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
-        
-############  Summer Hydrologic Drought ############    
-    elif plot_num == 1:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Summer Hydrologic Drought")
-        
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
-
-        data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd1 = data1
-        
-        data1=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd2 = data1
-        
-        data1=[mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                   movingaveragevec=np.ones(30)/30.) for i in range(12)]
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        data_hd3 = data1
-        
-        data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
-        Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
-        data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
-        
-        diff_drought_days = [
-                       nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') 
-                    -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') 
-                    for i in range(12)]  #+ve numbers are increasing drought
-       
-        colord = np.array(diff_drought_days)
-        
-        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
-        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
-        
-        file_graphics = 'drought_days.png'        
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
-
-
-
-############  Precipitation ############    
-    elif plot_num == 2:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Annual Precipitation")
-        
-        file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
-        data1=[mfx(file_nm, column=subbasin_data_climate_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
-        file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
-        data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
-        data_hd1 = data1
-        
-        diff_ann_precip = [
-                    + nrc(data_hd1[i],[0,0],[19,364], oper='avg') 
-                    - nrc(data_hd1[i],[69, 0],[88,364], oper='avg') 
-                    for i in range(12)]  # +ve numbers are decreasing precip
-        print nrc(data_hd1[0],[0,0],[19,364], oper='avg')
-        print nrc(data_hd1[0],[69, 0],[88,364], oper='avg')
-        print diff_ann_precip
-       
-        colord = np.array(diff_ann_precip)
-        
-        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white'],128)
-        WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
-        
-        file_graphics = 'diff_ann_precip.png'        
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
-
-
-
-############  Winter Temperature ############    
-    elif plot_num == 3:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        
-        plt.title("Change in Winter (Nov 1 - Mar 31) Temp")
-        
-        file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
-        data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-        file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
-        data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
-        data_hd1 = data1
-        
-        diff_winter_temp = [
-                      nrc(data_hd1[i],[69,31],[88,182], oper='avg') 
-                    - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') 
-                    for i in range(12)]  #+ve numbers are increasing temp
-        print 'early cent', '\t',nrc(data_hd1[i],[69,31],[88,182], oper='avg')
-        print 'late cent', '\t',nrc(data_hd1[i],[0, 31],[19,182], oper='avg')
-        print np.array(diff_winter_temp)
-       
-        colord = np.array(diff_winter_temp)
-        
-        x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
-        WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
-        
-        file_graphics = 'diff_winter_Temp.png'        
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
-        plt.close()       
-
-
-
-
-############  Summer Hydrologic Drought w mini figs/LINES & SHADING ############    
-    elif plot_num == 4:
-        plt.close()
-        
-        window = binomial_window(15)
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
-        # Calculate Baselines
-        baseline = {}
-        Q10 = {}
-        for key in SimulatedHistoric:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+            data1=[mfx(file_nm, column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                        movingaveragevec=np.ones(30)/30.) for i in range(12)]
-            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})  
-        
-        data_to_stack = []
-        for key in scenarios:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+            data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+            data_hd1 = data1
+            
+            data1=[mfx(file_nm.replace(file_baseline,file_high), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
                        movingaveragevec=np.ones(30)/30.) for i in range(12)]
-            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[scenarios_own[key]][i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
-            # Calculate baseline-subtracted value
-            if key == baseline_case:
-                summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
-        
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
-        upper = [np.max(data_stacked[i],1) for i in range(12)]
-        lower = [np.min(data_stacked[i],1) for i in range(12)]
-        
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        xctr = 0.5
-        yctr = 0.5
-        
-        redblue = ['red','blue']
-        num_yrs = len(summer_dr_d_smthd[0])
-        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, Drought\,$ [days]'
-        xlabel = 'Red = Drier'
-        write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
-               
-        title = "Change in Summer Hydrologic Drought"
-        file_graphics = 'change_in_drought_days_wGrphs.png'
-        
-        graphs = range(13); graphs.remove(11)
-
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-
-
-############  Water Deficit w mini figs/LINES & SHADING ############    
-    elif plot_num == 45:
-        plt.close()
-        
-        window = binomial_window(15)
-        file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
-        file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
-        # Calculate Baseline
-        baseline = {}
-        for key in SimulatedHistoric:
-            data_ET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i], 
-                         skip=cst.day_of_year_oct1) for i in range(12)]
-            data_PET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i]+1, 
-                         skip=cst.day_of_year_oct1) for i in range(12)]
-            data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=1, 
-                         skip=cst.day_of_year_oct1)
-            data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=2, 
-                         skip=cst.day_of_year_oct1)
-            data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
-            wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
-            baseline.update({key:[np.ones(89)*np.average(wd1[i]) for i in range(12)]})
-                
-        data_to_stack = []
-        for key in scenarios:
-            data_ET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
-                         skip=cst.day_of_year_oct1) for i in range(12)]
-            data_PET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
-                         skip=cst.day_of_year_oct1) for i in range(12)]
-            data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=1, 
-                         skip=cst.day_of_year_oct1)
-            data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=2, 
-                         skip=cst.day_of_year_oct1)
-            data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
-            wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
-            wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
-            data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
-            # Calculate baseline-subtracted value
-            if key == baseline_case:
-                    wd_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
-        
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
-        upper = [np.max(data_stacked[i],1) for i in range(12)]
-        lower = [np.min(data_stacked[i],1) for i in range(12)]
-        
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        xctr = 0.5
-        yctr = 0.5
-        
-        redblue = ['red','blue']
-        num_yrs = len(wd1_smthd[0])
-        write_tinyfigs2(wd_smthd,upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, Deficit\,$ [mm]'
-        xlabel = 'Red = Drier'
-        write_legend2(wd_smthd[11], upper[11], lower[11],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
-               
-        title = "Change in Water Deficit"
-        file_graphics = 'change_in_water_deficit_wGrphs.png'
-        
-        graphs = range(13); graphs.remove(11)
-
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-
-
-
-############  Winter Temperature w mini figs ############    
-    elif plot_num == 5:
-        plt.close()
-        window = binomial_window(15)
-        file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
-        file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
-       
-        # Calculate Baseline
-        baseline = {}
-        for key in SimulatedHistoric:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-            data_hd1.append(mfx(file_nmWB.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
-            data_winter = [data_hd1[i][:,29:182] for i in range(12)]
-            baseline.update({key:[np.mean(data_winter[i]) for i in range(12)]})  # avg over winter each year for ea subbasin
-                       
-        data_to_stack = []
-        for key in scenarios:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
-            data_hd1.append(mfx(file_nmWB.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
-            data_winter = [data_hd1[i][:,29:182] for i in range(12)]
-            winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
-            winter_temps_smthd1 = [np.subtract(movingaverage(winter_tmps[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
-            data_to_stack.append([winter_temps_smthd1[i] for i in range(12)])  
-            # Calculate baseline-subtracted value
-            if key == baseline_case:
-                winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
-                
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
-        upper = [np.max(data_stacked[i],1) for i in range(12)]
-        lower = [np.min(data_stacked[i],1) for i in range(12)]
-        
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        xctr = 0.5
-        yctr = 0.5
-
-        redblue = ['red','blue']
-        num_yrs = len(winter_temps_smthd[0])
-        write_tinyfigs2(winter_temps_smthd,upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]'
-        xlabel = 'Red = Warmer'
-        write_legend2(winter_temps_smthd[11], upper[11], lower[11],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
-        
-        title = "Change in Winter Temperatures (Nov - Mar)"
-        file_graphics = 'change_in_winter_temp_wGrphs.png'
-        
-        graphs = range(13); graphs.remove(11)
-
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs = graphs)
-
-
-############  Econ w mini figs ############    
-    elif plot_num == 6:
-        plt.close()
-        
-        econ_files = getfilenames(data_path,'subbasin')
-        econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]
-        for file_nm in econ_files:
-#            file_nm=data_path+'subbasin_tot_ac_of_developed_land_by_SUB_AREA_EarlyReFill_Run0.csv'
-            file_nmWB = file_nm     
-            title = file_nm.partition(data_path)[2][:-4]
-            png_file_nm = title+'.png'
-            data_v = np.array(np.genfromtxt(file_nm, delimiter=',',skip_header=1)) # Read csv file
-            data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
-            data1.append(data_v[2:,1])
-            data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
-            maxd = np.max(np.array([np.max(data1[i]) for i in range(11)]))
-            mind = np.min(np.array([np.min(data1[i]) for i in range(11)]))
-            if maxd >= abs(mind):
-                xctr = 0.75
-                yctr = 0.5
-            else:
-                xctr = 0.75
-                yctr = 0.7
-                
-            redblue = ['red','blue']
-            num_yrs = len(data1[0])
-            write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
+            data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+            data_hd2 = data1
             
-            ylabel = r'$\Delta \, value\,$'
-            xlabel = ' '
-            write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+            data1=[mfx(file_nm.replace(file_baseline,file_low), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+            data_hd3 = data1
             
-            file_graphics = png_file_nm        
-    
-            graphs = range(11)
-            graphs.append(12)
+            data_avg = [(data_hd1[i]+data_hd2[i]+data_hd3[i])/3. for i in range(12)]
+            Q10 = [np.percentile(data_avg[i][0:10,:], 10.,axis=0) for i in range(12)]
+            data_hd_binary = [compare_rows(data_avg[i],Q10[i]) for i in range(12)]  #1's are drought
             
-            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-            
-#            assert False
-            
-            
-            
-            
-            
-############  Econ w mini figs w lines & shading ############    
-    elif plot_num == 60:
-        plt.close()
-        file_types = ['subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv', 
-                      'subbasin_tot_ac_of_developed_land_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_forest_land_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_ag_land_values_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_dev_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_forest_land_values_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
-                      'subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
-                      ]
-        
-        for subfiletype in file_types:
-            econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]            
-            econ_files = getfilenames(data_path,'subbasin')
-
-            file_nm = data_path + subfiletype
-            data_to_stack = []
-            title = file_nm.partition(data_path)[2][:-13]
-            png_file_nm = title+'.png'
-            for key in scenarios:
-                data_v = np.array(np.genfromtxt(file_nm.replace('_Ref_Run0',scenarios[key]), delimiter=',',skip_header=1))
-                data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
-                data1.append(data_v[2:,1])
-                baseline = [data1[i][0] for i in range(11)]
-                data1 = [np.subtract(data1[i],baseline[i]) for i in range(11)]
-                data_to_stack.append([data1[i] for i in range(11)])  
+            diff_drought_days = [
+                           nrc(data_hd_binary[i],[69,260],[88,350], oper='sum') 
+                        -  nrc(data_hd_binary[i],[0, 260],[19,350], oper='sum') 
+                        for i in range(12)]  #+ve numbers are increasing drought
            
-            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
-            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
-            upper = [np.max(data_stacked[i],1) for i in range(11)]
-            lower = [np.min(data_stacked[i],1) for i in range(11)]
-                
-            maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
-            mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
-            if maxd >= abs(mind):
-                xctr = 0.75
-                yctr = 0.5
-            else:
-                xctr = 0.75
-                yctr = 0.7
+            colord = np.array(diff_drought_days)
+            
+            x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white','red'],128)
+            WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+            
+            file_graphics = 'drought_days.png'        
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+            plt.close()       
+    
+    
+    
+    ############  Precipitation ############    
+        elif plot_num == 2:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            
+            plt.title("Change in Annual Precipitation")
+            
+            file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
+            data1=[mfx(file_nm, column=subbasin_data_climate_col[i], skip=cst.day_of_year_oct1) for i in range(11)]
+            file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
+            data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11], skip=cst.day_of_year_oct1))
+            data_hd1 = data1
+            
+            diff_ann_precip = [
+                        + nrc(data_hd1[i],[0,0],[19,364], oper='avg') 
+                        - nrc(data_hd1[i],[69, 0],[88,364], oper='avg') 
+                        for i in range(12)]  # +ve numbers are decreasing precip
+            print nrc(data_hd1[0],[0,0],[19,364], oper='avg')
+            print nrc(data_hd1[0],[69, 0],[88,364], oper='avg')
+            print diff_ann_precip
+           
+            colord = np.array(diff_ann_precip)
+            
+            x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['blue','white'],128)
+            WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1)
+            
+            file_graphics = 'diff_ann_precip.png'        
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+            plt.close()       
+    
+    
+    
+    ############  Winter Temperature ############    
+        elif plot_num == 3:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            
+            plt.title("Change in Winter (Nov 1 - Mar 31) Temp")
+            
+            file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
+            data1=[mfx(file_nm, column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+            file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
+            data1.append(mfx(file_nmWB, column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+            data_hd1 = data1
+            
+            diff_winter_temp = [
+                          nrc(data_hd1[i],[69,31],[88,182], oper='avg') 
+                        - nrc(data_hd1[i],[0, 31],[19,182], oper='avg') 
+                        for i in range(12)]  #+ve numbers are increasing temp
+            print 'early cent', '\t',nrc(data_hd1[i],[69,31],[88,182], oper='avg')
+            print 'late cent', '\t',nrc(data_hd1[i],[0, 31],[19,182], oper='avg')
+            print np.array(diff_winter_temp)
+           
+            colord = np.array(diff_winter_temp)
+            
+            x,y=WBmap(subbasin_data_lons[:12],subbasin_data_lats[:12])
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','red'],128)
+            WBmap.scatter(x, y, marker='o',  s=200., lw=0,c=colord,cmap = cmap1)
+            
+            file_graphics = 'diff_winter_Temp.png'        
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=300, bbox_inches='tight')
+            plt.close()       
+    
+    
+    
+    
+    ############  Summer Hydrologic Drought w mini figs/LINES & SHADING ############    
+        elif plot_num == 4:
+            plt.close()
+            
+            window = binomial_window(15)
+            file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
+            # Calculate Baselines
+            baseline = {}
+            Q10 = {}
+            for key in SimulatedHistoric:
+                data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                           movingaveragevec=np.ones(30)/30.) for i in range(12)]
+                data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+                Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
+                data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
+                summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
+                baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})  
+            
+            data_to_stack = []
+            for key in scenarios:
+                data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                           movingaveragevec=np.ones(30)/30.) for i in range(12)]
+                data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+                data_hd_binary = [compare_rows(data_hd1[i],Q10[scenarios_own[key]][i]) for i in range(12)]  #1's are drought
+                summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
+                data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
+                # Calculate baseline-subtracted value
+                if key == baseline_case:
+                    summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
+            
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+            
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+            upper = [np.max(data_stacked[i],1) for i in range(12)]
+            lower = [np.min(data_stacked[i],1) for i in range(12)]
+            
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+            xctr = 0.5
+            yctr = 0.5
+            
             redblue = ['red','blue']
-            num_yrs = len(data1[0])
-            write_tinyfigs2(data1, upper, lower, figsize,
+            num_yrs = len(summer_dr_d_smthd[0])
+            write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
                             mind,maxd,redblue, num_yrs, facecolor = '0.6',
                             linewidth = 1.5)
             
-            ylabel = r'$\Delta \, value\,$'
-            xlabel = ' '
-            write_legend2(data1[4], upper[4], lower[4],figsize_leg,
+            ylabel = r'$\Delta \, Drought\,$ [days]'
+            xlabel = 'Red = Drier'
+            write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5)
+                   
+            title = "Change in Summer Hydrologic Drought"
+            file_graphics = 'change_in_drought_days_wGrphs.png'
+            
+            graphs = range(13); graphs.remove(11)
+    
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+    
+    
+    ############  Water Deficit w mini figs/LINES & SHADING ############    
+        elif plot_num == 45:
+            plt.close()
+            
+            window = binomial_window(15)
+            file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
+            file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
+            # Calculate Baseline
+            baseline = {}
+            for key in SimulatedHistoric:
+                data_ET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i], 
+                             skip=cst.day_of_year_oct1) for i in range(12)]
+                data_PET=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_ET_col[i]+1, 
+                             skip=cst.day_of_year_oct1) for i in range(12)]
+                data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=1, 
+                             skip=cst.day_of_year_oct1)
+                data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=2, 
+                             skip=cst.day_of_year_oct1)
+                data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
+                wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
+                baseline.update({key:[np.ones(89)*np.average(wd1[i]) for i in range(12)]})
+                    
+            data_to_stack = []
+            for key in scenarios:
+                data_ET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i], 
+                             skip=cst.day_of_year_oct1) for i in range(12)]
+                data_PET=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_ET_col[i]+1, 
+                             skip=cst.day_of_year_oct1) for i in range(12)]
+                data_ET[11] =mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=1, 
+                             skip=cst.day_of_year_oct1)
+                data_PET[11]=mfx(file_ex.replace(file_baseline+'Run0',scenarios[key]), column=2, 
+                             skip=cst.day_of_year_oct1)
+                data_hd1 = [data_PET[i] - data_ET[i] for i in range(12)]
+                wd1 = [np.sum(data_hd1[i][:,:],1) for i in range(12)]
+                wd1_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
+                data_to_stack.append([wd1_smthd[i] for i in range(12)]) 
+                # Calculate baseline-subtracted value
+                if key == baseline_case:
+                        wd_smthd = [np.subtract(movingaverage(wd1[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
+            
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+            
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+            upper = [np.max(data_stacked[i],1) for i in range(12)]
+            lower = [np.min(data_stacked[i],1) for i in range(12)]
+            
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+            xctr = 0.5
+            yctr = 0.5
+            
+            redblue = ['red','blue']
+            num_yrs = len(wd1_smthd[0])
+            write_tinyfigs2(wd_smthd,upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, Deficit\,$ [mm]'
+            xlabel = 'Red = Drier'
+            write_legend2(wd_smthd[11], upper[11], lower[11],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5)
+                   
+            title = "Change in Water Deficit"
+            file_graphics = 'change_in_water_deficit_wGrphs.png'
+            
+            graphs = range(13); graphs.remove(11)
+    
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+    
+    
+    
+    ############  Winter Temperature w mini figs ############    
+        elif plot_num == 5:
+            plt.close()
+            window = binomial_window(15)
+            file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
+            file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
+           
+            # Calculate Baseline
+            baseline = {}
+            for key in SimulatedHistoric:
+                data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+                data_hd1.append(mfx(file_nmWB.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+                data_winter = [data_hd1[i][:,29:182] for i in range(12)]
+                baseline.update({key:[np.mean(data_winter[i]) for i in range(12)]})  # avg over winter each year for ea subbasin
+                           
+            data_to_stack = []
+            for key in scenarios:
+                data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_climate_col[i]+1, skip=cst.day_of_year_oct1) for i in range(11)]
+                data_hd1.append(mfx(file_nmWB.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_climate_col[11]-1, skip=cst.day_of_year_oct1))
+                data_winter = [data_hd1[i][:,29:182] for i in range(12)]
+                winter_tmps = [np.mean(data_winter[i],1) for i in range(12)]  # avg over winter each year for ea subbasin
+                winter_temps_smthd1 = [np.subtract(movingaverage(winter_tmps[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
+                data_to_stack.append([winter_temps_smthd1[i] for i in range(12)])  
+                # Calculate baseline-subtracted value
+                if key == baseline_case:
+                    winter_temps_smthd = [np.subtract(movingaverage(winter_tmps[i],window), baseline[scenarios_own[key]][i])[8:83] for i in range(12)]
+                    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+            
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+            upper = [np.max(data_stacked[i],1) for i in range(12)]
+            lower = [np.min(data_stacked[i],1) for i in range(12)]
+            
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+            xctr = 0.5
+            yctr = 0.5
+    
+            redblue = ['red','blue']
+            num_yrs = len(winter_temps_smthd[0])
+            write_tinyfigs2(winter_temps_smthd,upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, Temp\,$ [$^{\circ}\mathrm{C}$]'
+            xlabel = 'Red = Warmer'
+            write_legend2(winter_temps_smthd[11], upper[11], lower[11],figsize_leg,
                           mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                           linewidth=1.5)
             
-            file_graphics = png_file_nm        
+            title = "Change in Winter Temperatures (Nov - Mar)"
+            file_graphics = 'change_in_winter_temp_wGrphs.png'
+            
+            graphs = range(13); graphs.remove(11)
     
-            graphs = range(11)
-            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-                
-#            assert False
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs = graphs)
+    
+    
+    ############  Econ w mini figs ############    
+        elif plot_num == 6:
+            plt.close()
             
-            
-            
-            
-            
-############  Econ w mini figs normalized by land area ############    
-    elif plot_num == 7:
-        plt.close()
-        run_names = [
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
-        ]
-        
-        for key in scenarios:
-            
-            for files in run_names:
-                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
-                print files_scen
-                title = files_scen[0][:-4]
-                file_nm_num = data_path + files_scen[0]
-                file_nm_denom = data_path + files_scen[1]
-                file_nmWB = file_nm_num     
-                png_file_nm = title+'_divided_by_area'+'.png'
-                data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
-                data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
-                data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
-                data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
-                data1_num.append(data_v[2:,1])
-                data1_denom.append(data_v[2:,1])
-                data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
+            econ_files = getfilenames(data_path,'subbasin')
+            econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]
+            for file_nm in econ_files:
+    #            file_nm=data_path+'subbasin_tot_ac_of_developed_land_by_SUB_AREA_EarlyReFill_Run0.csv'
+                file_nmWB = file_nm     
+                title = file_nm.partition(data_path)[2][:-4]
+                png_file_nm = title+'.png'
+                data_v = np.array(np.genfromtxt(file_nm, delimiter=',',skip_header=1)) # Read csv file
+                data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
+                data1.append(data_v[2:,1])
                 data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
                 maxd = np.max(np.array([np.max(data1[i]) for i in range(11)]))
                 mind = np.min(np.array([np.min(data1[i]) for i in range(11)]))
@@ -1297,7 +1164,7 @@ for plot_num in plots_to_plot:
                 num_yrs = len(data1[0])
                 write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
                 
-                ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
+                ylabel = r'$\Delta \, value\,$'
                 xlabel = ' '
                 write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
                 
@@ -1305,708 +1172,841 @@ for plot_num in plots_to_plot:
         
                 graphs = range(11)
                 graphs.append(12)
+                
                 write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
                 
-#                assert False
+    #            assert False
+                
+                
+                
+                
+                
+    ############  Econ w mini figs w lines & shading ############    
+        elif plot_num == 60:
+            plt.close()
+            file_types = ['subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv', 
+                          'subbasin_tot_ac_of_developed_land_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ac_of_forest_land_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ag_land_values_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ag_land_values_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_ag_land_values_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_dev_land_values_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_forest_land_values_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv',
+                          'subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv',
+                          ]
             
-            
-            
-            
-############  Econ w mini figs normalized by land area ############    
-    elif plot_num == 70:
-        plt.close()
-        run_names = [
-        ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
-        ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
-        ]
+            for subfiletype in file_types:
+                econ_fileswopath = [eachfile.partition(data_path)[2] for eachfile in econ_files]            
+                econ_files = getfilenames(data_path,'subbasin')
+    
+                file_nm = data_path + subfiletype
+                data_to_stack = []
+                title = file_nm.partition(data_path)[2][:-13]
+                png_file_nm = title+'.png'
+                for key in scenarios:
+                    data_v = np.array(np.genfromtxt(file_nm.replace('_Ref_Run0',scenarios[key]), delimiter=',',skip_header=1))
+                    data1 = [data_v[2:,subbasin_data_order[i]+1] for i in range(11)]
+                    data1.append(data_v[2:,1])
+                    baseline = [data1[i][0] for i in range(11)]
+                    data1 = [np.subtract(data1[i],baseline[i]) for i in range(11)]
+                    data_to_stack.append([data1[i] for i in range(11)])  
+               
+                data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+                data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
+                upper = [np.max(data_stacked[i],1) for i in range(11)]
+                lower = [np.min(data_stacked[i],1) for i in range(11)]
+                    
+                maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
+                mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+                if maxd >= abs(mind):
+                    xctr = 0.75
+                    yctr = 0.5
+                else:
+                    xctr = 0.75
+                    yctr = 0.7
+                redblue = ['red','blue']
+                num_yrs = len(data1[0])
+                write_tinyfigs2(data1, upper, lower, figsize,
+                                mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                                linewidth = 1.5)
+                
+                ylabel = r'$\Delta \, value\,$'
+                xlabel = ' '
+                write_legend2(data1[4], upper[4], lower[4],figsize_leg,
+                              mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                              linewidth=1.5)
+                
+                file_graphics = png_file_nm        
         
+                graphs = range(11)
+                write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+                    
+    #            assert False
+                
+                
+                
+                
+                
+    ############  Econ w mini figs normalized by land area ############    
+        elif plot_num == 7:
+            plt.close()
+            run_names = [
+            ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
+            ]
             
-        for files in run_names:
-            data_to_stack = []
-            title = files[0][:-13]
-            print title
             for key in scenarios:
-                files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
-                file_nm_num = data_path + files_scen[0]
-                file_nm_denom = data_path + files_scen[1]
-                file_nmWB = file_nm_num     
-                png_file_nm = title+'_divided_by_area'+'.png'
-                data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
-                data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
-                data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
-                data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
-#                data1_num.append(data_v_num)
-#                data1_denom.append(data_v_denom)
-                data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
-                data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
-                data_to_stack.append([data1[i] for i in range(11)])  
                 
-            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+                for files in run_names:
+                    files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                    print files_scen
+                    title = files_scen[0][:-4]
+                    file_nm_num = data_path + files_scen[0]
+                    file_nm_denom = data_path + files_scen[1]
+                    file_nmWB = file_nm_num     
+                    png_file_nm = title+'_divided_by_area'+'.png'
+                    data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
+                    data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
+                    data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
+                    data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
+                    data1_num.append(data_v[2:,1])
+                    data1_denom.append(data_v[2:,1])
+                    data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
+                    data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
+                    maxd = np.max(np.array([np.max(data1[i]) for i in range(11)]))
+                    mind = np.min(np.array([np.min(data1[i]) for i in range(11)]))
+                    if maxd >= abs(mind):
+                        xctr = 0.75
+                        yctr = 0.5
+                    else:
+                        xctr = 0.75
+                        yctr = 0.7
+                        
+                    redblue = ['red','blue']
+                    num_yrs = len(data1[0])
+                    write_tinyfigs(data1,figsize,mind,maxd,redblue, num_yrs)
+                    
+                    ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
+                    xlabel = ' '
+                    write_legend(data1[4],figsize_leg,mind,maxd,redblue,num_yrs,ylabel,xlabel)
+                    
+                    file_graphics = png_file_nm        
             
-            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
-            upper = [np.max(data_stacked[i],1) for i in range(11)]
-            lower = [np.min(data_stacked[i],1) for i in range(11)]
-            
-            maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
-            mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
-            if maxd >= abs(mind):
-                xctr = 0.75
-                yctr = 0.5
-            else:
-                xctr = 0.75
-                yctr = 0.7
+                    graphs = range(11)
+                    graphs.append(12)
+                    write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+                    
+    #                assert False
                 
+                
+                
+                
+    ############  Econ w mini figs normalized by land area ############    
+        elif plot_num == 70:
+            plt.close()
+            run_names = [
+            ('subbasin_tot_LR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_ag_land_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_LR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_irrigable_GW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_GW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_LR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv'),
+            ('subbasin_tot_SR_farm_rent_irrigable_SW_by_SUB_AREA_Ref_Run0.csv','subbasin_tot_ac_of_irrigable_ag_land_SW_by_SUB_AREA_Ref_Run0.csv')
+            ]
+            
+                
+            for files in run_names:
+                data_to_stack = []
+                title = files[0][:-13]
+                print title
+                for key in scenarios:
+                    files_scen = (files[0].replace(scenarios['Reference'],scenarios[key]),files[1].replace(scenarios['Reference'],scenarios[key]))
+                    file_nm_num = data_path + files_scen[0]
+                    file_nm_denom = data_path + files_scen[1]
+                    file_nmWB = file_nm_num     
+                    png_file_nm = title+'_divided_by_area'+'.png'
+                    data_v_num = np.array(np.genfromtxt(file_nm_num, delimiter=',',skip_header=1)) # Read csv file
+                    data_v_denom = np.array(np.genfromtxt(file_nm_denom, delimiter=',',skip_header=1)) # Read csv file
+                    data1_num = [data_v_num[2:,subbasin_data_order[i]+1] for i in range(11)]
+                    data1_denom = [data_v_denom[2:,subbasin_data_order[i]+1] for i in range(11)]
+    #                data1_num.append(data_v_num)
+    #                data1_denom.append(data_v_denom)
+                    data1 = [np.divide(data1_num[i],data1_denom[i]) for i in range(11)]
+                    data1 = [np.subtract(data1[i],data1[i][0]) for i in range(11)]
+                    data_to_stack.append([data1[i] for i in range(11)])  
+                    
+                data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+                
+                data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
+                upper = [np.max(data_stacked[i],1) for i in range(11)]
+                lower = [np.min(data_stacked[i],1) for i in range(11)]
+                
+                maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
+                mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+                if maxd >= abs(mind):
+                    xctr = 0.75
+                    yctr = 0.5
+                else:
+                    xctr = 0.75
+                    yctr = 0.7
+                    
+                redblue = ['red','blue']
+                num_yrs = len(data1[0])
+                write_tinyfigs2(data1,upper, lower, figsize, mind,maxd,redblue, 
+                                num_yrs, facecolor='0.6', linewidth = 1.5)
+                
+                ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
+                xlabel = ' '
+                write_legend2(data1[4],upper[4], lower[4], figsize_leg,
+                              mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                              linewidth=1.5)
+                
+                file_graphics = png_file_nm        
+        
+                graphs = range(11)
+                graphs.append(12)
+                write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+                
+                
+                
+                
+    ############  Center of Timing w mini figs ############    
+        elif plot_num == 8:
+            plt.close()
+            window = binomial_window(15)
+            file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
+                   
+            # Calculate Baseline
+            baseline = {}
+            for key in SimulatedHistoric:
+                data1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+                data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+                ctdata = [np.array(ct(data1[i])) for i in range(12)]
+                baseline.update({key:[np.mean(ctdata[i]) for i in range(12)]})
+            
+            data_to_stack = []
+            for key in scenarios:
+                data1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+                data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
+                ctdata = [np.array(ct(data1[i])) for i in range(12)]
+                delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
+                data_to_stack.append([delta_discharge_timing[i] for i in range(12)])  
+                if key == baseline_case:
+                    delta_discharge_timing_baseline = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
+    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+            
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+            upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
+            lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+            delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
+    
             redblue = ['red','blue']
-            num_yrs = len(data1[0])
-            write_tinyfigs2(data1,upper, lower, figsize, mind,maxd,redblue, 
-                            num_yrs, facecolor='0.6', linewidth = 1.5)
+            num_yrs = len(delta_discharge_timing[0])
+            write_tinyfigs2(delta_discharge_timing_baseline, upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
             
-            ylabel = r'$\Delta \, Value\,$' +r'[\$/ac]'
-            xlabel = ' '
-            write_legend2(data1[4],upper[4], lower[4], figsize_leg,
+            ylabel = r'$\Delta \, CT\,$ [days]'
+            xlabel = 'Red = Earlier'
+            write_legend2(delta_discharge_timing_baseline[11], upper[11], lower[11],figsize_leg,
                           mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                           linewidth=1.5)
-            
-            file_graphics = png_file_nm        
+                
+            title = "Change in Timing of Discharge (CT)"
+            file_graphics = 'change_in_discharge_timing_wGrphs.png'        
+            graphs = range(13); graphs.remove(11)
     
-            graphs = range(11)
-            graphs.append(12)
             write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+                
+                
+                
+                
+    ############  Max SWE w mini figs ############    
+        elif plot_num == 9:
+            plt.close()
+    
+            window = binomial_window(15)
+            figsize9=[(figsize[i][0],figsize[i][1]*1.5) for i in range(12)]
+            figsize_leg9=(figsize_leg[0],figsize_leg[1]*1.5) 
+            file_nm = data_path + 'Snow_(Subbasin)'+file_baseline+'Run0.csv'
+            file_nmWB = data_path + 'Snow_(mm)'+file_baseline+'Run0.csv'
+                    
+            # Calculate Baseline
+            baseline = {}
+            for key in SimulatedHistoric:
+                data1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_snow_col[i], 
+                           skip=cst.day_of_year_oct1) for i in range(11)]
+                data1.append(mfx(file_nmWB.replace(file_baseline+'Run0',SimulatedHistoric[key]), 
+                                 column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+                SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+                baseline.update({key:[np.mean(SWE1[i]) for i in range(12)]}) 
             
+            data_to_stack = []
+            for key in scenarios:
+                data1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_snow_col[i], 
+                           skip=cst.day_of_year_oct1) for i in range(11)]
+                data1.append(mfx(file_nmWB.replace(file_baseline+'Run0',scenarios[key]), 
+                                 column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
+                SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
+                data_to_stack.append([np.subtract(movingaverage(SWE1[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
+                if key == baseline_case:
+                    SWE_smthd = [10.*np.subtract(movingaverage(SWE1[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]  # plot in mm instead of cm
+    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+            data_stacked = [10.*np.column_stack(data_to_stack[i]) for i in range(12)] #stack & convert to mm
+            upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
+            lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+            SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
+            xctr = 0.5
+            yctr = 0.75
             
+            redblue = ['blue','red']
+            num_yrs = len(SWE_smthd[0])
+            write_tinyfigs2(SWE_smthd, upper, lower, figsize9,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
             
+            ylabel = r'$\Delta \, SWE\,$ [mm]'
+            xlabel = 'Red = Less SWE'
+            write_legend2(SWE_smthd[11], upper[11], lower[11],figsize_leg9,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5)
+                   
             
-############  Center of Timing w mini figs ############    
-    elif plot_num == 8:
-        plt.close()
-        window = binomial_window(15)
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
-               
-        # Calculate Baseline
-        baseline = {}
-        for key in SimulatedHistoric:
-            data1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+            title = "Change in Basin-Averaged Max SWE"
+            file_graphics = 'change_in_max_SWE_wGrphs.png'        
+            graphs = range(13); graphs.remove(11)
+    
+            write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+    
+    ##############################################################################
+    #  ENVIRONMENTAL FLOWS        
+    ############  BiOp & Env Flows w mini figs ############    
+        elif plot_num == 101:
+            plt.close()
+            window = binomial_window(15)
+            num_locs = len(res_data_list)
+            figsize=[(1.1,0.8) for i in range(num_locs)]
+            figsize.append((1.1,0.8))
+            figsize_leg = (1.1,0.8)
+                    
+            # Get EF & BiOp rules
+            EFrules = get_EFrules()
+            EF_rules_list = [EFrules[key] for key in EFrules]
+            EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+            EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+            
+            # Calculate Baseline
+            file_nm = res_data_file
+            baseline = {}
+            for key in SimulatedHistoric:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
+                baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
+           
+            # Calculate baseline-subtracted value        
+            data_to_stack = []
+            for key in scenarios:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
+                data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
+                if key == baseline_case:
+                    viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
+    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+            upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+            lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+            viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+            xctr = 0.5
+            yctr = 0.75
+            
+            redblue = ['blue','red']
+            num_yrs = len(viols_smthd[0])
+            write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, EF \,Reliab\,$ [days]'
+            xlabel = 'Red = less EF reliability'
+            write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5, which_legend = 'EFs')
+                   
+            
+            title = "Reliability of BiOp and Environmental Flows"
+            file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
+            graphs = range(num_locs+1); graphs.remove(0)
+    
+            write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), 
+                      shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
+           
+    
+    
+    
+    ##############################################################################
+    #  ENVIRONMENTAL FLOWS        
+    ############  BiOp & Env Flows w mini figs SUMMER ONLY ############    
+        elif plot_num == 102:
+            plt.close()
+            window = binomial_window(15)
+            num_locs = len(res_data_list)
+            figsize=[(1.1,0.8) for i in range(num_locs)]
+            figsize.append((1.1,0.8))
+            figsize_leg = (1.1,0.8)
+            
+            # Get EF & BiOp rules
+            EFrules = get_EFrules()
+            EF_rules_list = [EFrules[key] for key in EFrules]
+            EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+            EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+            
+            # Calculate Baseline
+            file_nm = res_data_file
+            baseline = {}
+            for key in SimulatedHistoric:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
+                baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
+                    
+            # Calculate baseline-subtracted value
+            data_to_stack = []
+            for key in scenarios:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
+                data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
+                if key == baseline_case:
+                    viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
+    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+            upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+            lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+            viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+            xctr = 0.5
+            yctr = 0.75
+            
+            redblue = ['blue','red']
+            num_yrs = len(viols_smthd[0])
+            write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
+            xlabel = 'Red = less Summer reliability'
+            write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5, which_legend = 'EFs')
+                   
+            
+            title = "Summer Reliability of BiOp and Env Flows"
+            file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
+            graphs = range(num_locs+1); graphs.remove(0)
+    
+            EFlats_tweaked = EFlats
+            EFlats_tweaked[7] = EFlats_tweaked[7] - 0.05
+            EFlats_tweaked[6] = EFlats_tweaked[6] - 0.03
+            write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
+                      shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
+           
+    
+    ##############################################################################
+    #  ENVIRONMENTAL FLOWS        
+    ############  BiOp & Env Flows w mini figs NOT SUMMER  ############    
+        elif plot_num == 103:
+            plt.close()
+            window = binomial_window(15)
+            num_locs = len(res_data_list)
+            figsize=[(1.1,0.8) for i in range(num_locs)]
+            figsize.append((1.1,0.8))
+            figsize_leg = (1.1,0.8)        
+            
+            # Get EF & BiOp rules
+            EFrules = get_EFrules()
+            EF_rules_list = [EFrules[key] for key in EFrules]
+            EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
+            EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
+            
+            # Calculate Baseline
+            file_nm = res_data_file
+            baseline = {}
+            for key in SimulatedHistoric:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
+                baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
+            
+            data_to_stack = []
+            for key in scenarios:
+                data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
+                num_yrs = np.shape(data1[0])[0]       
+                viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
+                data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
+                if key == baseline_case:
+                    viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
+    
+            data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
+            data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
+            upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
+            lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+                
+            maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
+            mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
+            viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
+            xctr = 0.5
+            yctr = 0.75
+            
+            redblue = ['blue','red']
+            num_yrs = len(viols_smthd[0])
+            write_tinyfigs2(viols_smthd, upper, lower, figsize,
+                            mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                            linewidth = 1.5)
+            
+            ylabel = r'$\Delta \,Reliab\,$ [days]'
+            xlabel = 'Red = less Non-Summer reliability'
+            write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
+                          mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                          linewidth=1.5, which_legend = 'EFs')
+                   
+            
+            title = "Non-Summer Reliability of BiOp and Env Flows"
+            file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
+            graphs = range(num_locs+1); graphs.remove(0)
+    
+            EFlats_tweaked = EFlats
+    #        EFlats_tweaked[7] = EFlats_tweaked[7] + 0.03
+            EFlats_tweaked[6] = EFlats_tweaked[6] + 0.03
+            EFlats_tweaked[3] = EFlats_tweaked[3] + 0.03
+            write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
+                      shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
+    
+    ##############################################################################
+    #  SNOW and PRECIP CORRELATIONS        
+    ############  Correlations of discharge to SWE  ############    
+    
+        elif plot_num == 201:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            num_gauge_sig = len(Q_SWE1_sig)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+    #        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" SWE")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/900.,10.,20000.)
+            
+            colord = np.array(SWE_frac_sig)
+            
+            x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
+            startcolor = 'blue'
+            midcolor1 = '#B24700'
+            midcolor2 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction discharge increase with median DOY '+str(doyloop)+' SWE',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            
+            file_graphics = 'Q_doy'+str(doyloop)+'_SWE_correlations '+mth_name+'.png'     
+            plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()       
+            
+    ##############################################################################
+    #  SNOW and PRECIP CORRELATIONS        
+    ############  Correlations of discharge to PRECIP  ############    
+    
+        elif plot_num == 202:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            num_gauge_sig = len(Q_PRE1_sig)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+    #        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title("Jul - Aug Discharge & Feb - Apr Precip")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
+            
+            colord = np.array(PRE_frac_sig)
+            
+            x,y=WBmap(c_Longs_PRE,c_Lats_PRE)
+            startcolor = 'blue'
+            midcolor1 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            
+            file_graphics = 'Q_Feb-AprPrecip_correlations.png'     
+            plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()       
+    
+            
+    ##############################################################################
+    #  SNOW and PRECIP CORRELATIONS        MODEL
+    ############  Correlations of discharge to SNOW  ############    
+    
+        elif plot_num == 203:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            scenario = file_historical
+            file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
+            file_nm_WBSWE = data_path + 'Snow_(mm)'+scenario+'Run0.csv'
+            data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+            c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
+            c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
+            for j in range(num_gauge_csv): 
+                file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
+                data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
+                c_Lats_model.append(gauge_info_csv[j][3])
+                c_Longs_model.append(gauge_info_csv[j][4])
             data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-            ctdata = [np.array(ct(data1[i])) for i in range(12)]
-            baseline.update({key:[np.mean(ctdata[i]) for i in range(12)]})
-        
-        data_to_stack = []
-        for key in scenarios:
-            data1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1) for i in range(12)]
+            num_yrs = np.shape(data1[0])[0]
+            shft = 365 - cst.day_of_year_oct1
+            jul1 = cst.day_of_year_jul1 + shft
+            aug31 = cst.day_of_year_aug31 + shft
+            first_day = jul1
+            last_day = aug31
+            num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
+            summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
+            data1=mfx(file_nm_WBSWE,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
+            apr1 = cst.day_of_year_apr1 + shft
+            Apr1_SWE_by_yr = [nrc(data1,[j,apr1],[j,apr1]) for j in range(num_yrs)] 
+            Apr1_SWE_by_yr_norm = np.array(Apr1_SWE_by_yr)/np.median(Apr1_SWE_by_yr)  # normalized SWE to median Apr 1
+            regression_stats = [stats.linregress(Apr1_SWE_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+            # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+            Q_SWE1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
+            SWE_frac1 = [regression_stats[i][0]/Q_SWE1_sig[i] for i in range(num_records)]
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+    #        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title("Jul - Aug Discharge & Apr 1 SWE Model")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/data1_2nd_lgst,10.,20000.)
+            
+            colord = np.array(SWE_frac1)
+            
+            x,y=WBmap(c_Longs_model,c_Lats_model)
+            startcolor = 'blue'
+            midcolor1 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction discharge increase with avg F',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            
+            file_graphics = 'Q_Apr1SWE_correlations_model.png'     
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()   
+            
+    ##############################################################################
+    #  SNOW and PRECIP CORRELATIONS             MODEL      
+    ############  Correlations of discharge to Precip  ############    
+    
+        elif plot_num == 204:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            scenario = file_historical
+            file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
+            file_nm_WBPrecip = data_path + 'Climate'+scenario+'Run0.csv'
+            data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
+            c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
+            c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
+            c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
+            c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
+            for j in range(num_gauge_csv): 
+                file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
+                data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
+                c_Lats_model.append(gauge_info_csv[j][3])
+                c_Longs_model.append(gauge_info_csv[j][4])
             data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-            ctdata = [np.array(ct(data1[i])) for i in range(12)]
-            delta_discharge_timing = [-1.*np.subtract(movingaverage(ctdata[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
-            data_to_stack.append([delta_discharge_timing[i] for i in range(12)])  
-            if key == baseline_case:
-                delta_discharge_timing_baseline = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
-
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
-        upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
-        lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+            num_yrs = np.shape(data1[0])[0]
+            shft = 365 - cst.day_of_year_oct1
+            jul1 = cst.day_of_year_jul1 + shft
+            aug31 = cst.day_of_year_aug31 + shft
+            first_day = jul1
+            last_day = aug31
+            num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
+            summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
+            data1=mfx(file_nm_WBPrecip,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
+            feb1  = cst.day_of_year_feb1 + shft
+            apr30 = cst.day_of_year_apr30 + shft
+            spring_Precip_by_yr = [nrc(data1,[j,feb1],[j,apr30]) for j in range(num_yrs)] 
+            spring_Precip_by_yr_norm = np.array(spring_Precip_by_yr)/np.median(spring_Precip_by_yr)  # normalized SWE to median Apr 1
+            regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+            # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+            Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
+            Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        delta_discharge_timing = np.array([delta_discharge_timing[i][8:83] for i in range(12)])
-
-        redblue = ['red','blue']
-        num_yrs = len(delta_discharge_timing[0])
-        write_tinyfigs2(delta_discharge_timing_baseline, upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, CT\,$ [days]'
-        xlabel = 'Red = Earlier'
-        write_legend2(delta_discharge_timing_baseline[11], upper[11], lower[11],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+    #        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
             
-        title = "Change in Timing of Discharge (CT)"
-        file_graphics = 'change_in_discharge_timing_wGrphs.png'        
-        graphs = range(13); graphs.remove(11)
-
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_Precip1_sig)/data1_2nd_lgst,10.,20000.)
             
+            colord = np.array(Precip_frac1)
             
+            x,y=WBmap(c_Longs_model,c_Lats_model)
+            startcolor = 'blue'
+            midcolor1 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction discharge increase with avg Feb - Apr Precip',size=10)
+            cbar.ax.tick_params(labelsize=9) 
             
+            file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
+            plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()      
+    
+    
+    ##############################################################################
+    #  TEMPERATURE CORRELATIONS        
+    ############  Correlations of discharge to Temperature  ############    
+    
+        elif plot_num == 205:
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            file_nm_temp = 'C:\\code\\maplot\\' + 'Willamette Basin Monthly temperature 1895 forward.csv'
+            start_yr, end_yr, tmax = mfx(file_nm_temp,column=1,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
+            tmax = tmax/10.
+            start_yr, end_yr, tmin = mfx(file_nm_temp,column=2,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
+            tmin = tmin/10.
+            tavg = (tmax + tmin)/2.
+            shft = 365 - cst.day_of_year_oct1
+            feb1 =  cst.day_of_year_feb1  + shft
+            apr30 = cst.day_of_year_apr30 + shft
+            num_yrs = 2006 - 1979 + 1
+            spring_Temp_avg = nrc(tavg,[0,feb1],[58,apr30]) 
+            spring_Temp_by_yr = [nrc(tavg,[j,feb1],[j,apr30]) for j in range(1979-start_yr,2006+1-start_yr)]
+            Q_Temps = []
+            c_Lats_Temps = []
+            c_Longs_Temps = []
+            for i in range(num_Q_full):
+                for j in range(num_gauge):
+                    if Q_pandas[i].name == gage_num[j]:
+                        Q_Temps.append(np.array(Q_pandas[i][:-8]))
+                        c_Lats_Temps.append(c_Lats[j])
+                        c_Longs_Temps.append(c_Longs[j])
+     
+            spring_Temp_by_yr_norm = (np.array(spring_Temp_by_yr) - np.ones_like(spring_Temp_by_yr)*spring_Temp_avg)/\
+                                        (np.max(spring_Temp_by_yr) - np.average(spring_Temp_by_yr))   # normalize spring temps
+            regression_stats = [stats.linregress(spring_Temp_by_yr,Q_Temps[i]) for i in range(num_Q_full)]
+    
+    #       regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
+            # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
+            Q_Temp1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_Q_full)]
+            Temp_frac1 = [-1*regression_stats[i][0]/Q_Temp1_sig[i] for i in range(num_Q_full)]
+            for i in range(num_Q_full-1,-1,-1): # count back from end of list
+                if regression_stats[i][3] > significance_cutoff:   # zero out parts of list that are not significant
+                    del(regression_stats[i])
+                    del(Q_Temp1_sig[i])
+                    del(Temp_frac1[i])
+                    del(c_Longs_Temps[i])
+                    del(c_Lats_Temps[i])
             
-############  Max SWE w mini figs ############    
-    elif plot_num == 9:
-        plt.close()
-
-        window = binomial_window(15)
-        figsize9=[(figsize[i][0],figsize[i][1]*1.5) for i in range(12)]
-        figsize_leg9=(figsize_leg[0],figsize_leg[1]*1.5) 
-        file_nm = data_path + 'Snow_(Subbasin)'+file_baseline+'Run0.csv'
-        file_nmWB = data_path + 'Snow_(mm)'+file_baseline+'Run0.csv'
-                
-        # Calculate Baseline
-        baseline = {}
-        for key in SimulatedHistoric:
-            data1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_snow_col[i], 
-                       skip=cst.day_of_year_oct1) for i in range(11)]
-            data1.append(mfx(file_nmWB.replace(file_baseline+'Run0',SimulatedHistoric[key]), 
-                             column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
-            SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
-            baseline.update({key:[np.mean(SWE1[i]) for i in range(12)]}) 
-        
-        data_to_stack = []
-        for key in scenarios:
-            data1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_snow_col[i], 
-                       skip=cst.day_of_year_oct1) for i in range(11)]
-            data1.append(mfx(file_nmWB.replace(file_baseline+'Run0',scenarios[key]), 
-                             column=subbasin_data_snow_col[11], skip=cst.day_of_year_oct1))
-            SWE1 = [np.max(data1[i],1)*subbasin_data_area[i]/10./subbasin_data_area[11] for i in range(12)]  # max SWE (cm) over winter each year for ea subbasin
-            data_to_stack.append([np.subtract(movingaverage(SWE1[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
-            if key == baseline_case:
-                SWE_smthd = [10.*np.subtract(movingaverage(SWE1[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]  # plot in mm instead of cm
-
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
-        data_stacked = [10.*np.column_stack(data_to_stack[i]) for i in range(12)] #stack & convert to mm
-        upper = [np.max(data_stacked[i][8:83],1) for i in range(12)]
-        lower = [np.min(data_stacked[i][8:83],1) for i in range(12)]
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title("Jul - Aug Discharge & Feb - Apr Temperature")
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        SWE_smthd = [SWE_smthd[i][8:83] for i in range(12)]
-        xctr = 0.5
-        yctr = 0.75
-        
-        redblue = ['blue','red']
-        num_yrs = len(SWE_smthd[0])
-        write_tinyfigs2(SWE_smthd, upper, lower, figsize9,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, SWE\,$ [mm]'
-        xlabel = 'Red = Less SWE'
-        write_legend2(SWE_smthd[11], upper[11], lower[11],figsize_leg9,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
-               
-        
-        title = "Change in Basin-Averaged Max SWE"
-        file_graphics = 'change_in_max_SWE_wGrphs.png'        
-        graphs = range(13); graphs.remove(11)
-
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-
-##############################################################################
-#  ENVIRONMENTAL FLOWS        
-############  BiOp & Env Flows w mini figs ############    
-    elif plot_num == 101:
-        plt.close()
-        window = binomial_window(15)
-        num_locs = len(res_data_list)
-        figsize=[(1.1,0.8) for i in range(num_locs)]
-        figsize.append((1.1,0.8))
-        figsize_leg = (1.1,0.8)
-                
-        # Get EF & BiOp rules
-        EFrules = get_EFrules()
-        EF_rules_list = [EFrules[key] for key in EFrules]
-        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
-        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
-        
-        # Calculate Baseline
-        file_nm = res_data_file
-        baseline = {}
-        for key in SimulatedHistoric:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
-            baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
-       
-        # Calculate baseline-subtracted value        
-        data_to_stack = []
-        for key in scenarios:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i]) for i in range(num_locs)]  # num of rule violations per year
-            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
-            if key == baseline_case:
-                viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
-
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
-        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
-        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_Temp1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_Temp1_sig)/data1_2nd_lgst,10.,20000.)
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
-        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
-        xctr = 0.5
-        yctr = 0.75
-        
-        redblue = ['blue','red']
-        num_yrs = len(viols_smthd[0])
-        write_tinyfigs2(viols_smthd, upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, EF \,Reliab\,$ [days]'
-        xlabel = 'Red = less EF reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5, which_legend = 'EFs')
-               
-        
-        title = "Reliability of BiOp and Environmental Flows"
-        file_graphics = 'change_in_Biop-EF_reliability_wGrphs.png'        
-        graphs = range(num_locs+1); graphs.remove(0)
-
-        write_map(title, EFlons, EFlats, file_graphics, get_metadata(file_nm[0]), 
-                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
-       
-
-
-
-##############################################################################
-#  ENVIRONMENTAL FLOWS        
-############  BiOp & Env Flows w mini figs SUMMER ONLY ############    
-    elif plot_num == 102:
-        plt.close()
-        window = binomial_window(15)
-        num_locs = len(res_data_list)
-        figsize=[(1.1,0.8) for i in range(num_locs)]
-        figsize.append((1.1,0.8))
-        figsize_leg = (1.1,0.8)
-        
-        # Get EF & BiOp rules
-        EFrules = get_EFrules()
-        EF_rules_list = [EFrules[key] for key in EFrules]
-        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
-        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
-        
-        # Calculate Baseline
-        file_nm = res_data_file
-        baseline = {}
-        for key in SimulatedHistoric:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
-            baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
-                
-        # Calculate baseline-subtracted value
-        data_to_stack = []
-        for key in scenarios:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='summer') for i in range(num_locs)]  # num of rule violations per year
-            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
-            if key == baseline_case:
-                viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
-
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
-        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
-        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            colord = np.array(Temp_frac1)
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
-        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
-        xctr = 0.5
-        yctr = 0.75
-        
-        redblue = ['blue','red']
-        num_yrs = len(viols_smthd[0])
-        write_tinyfigs2(viols_smthd, upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \, Sum \,Reliab\,$ [days]'
-        xlabel = 'Red = less Summer reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5, which_legend = 'EFs')
-               
-        
-        title = "Summer Reliability of BiOp and Env Flows"
-        file_graphics = 'change_in_Biop-EF_summer_reliability_wGrphs.png'        
-        graphs = range(num_locs+1); graphs.remove(0)
-
-        EFlats_tweaked = EFlats
-        EFlats_tweaked[7] = EFlats_tweaked[7] - 0.05
-        EFlats_tweaked[6] = EFlats_tweaked[6] - 0.03
-        write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
-                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
-       
-
-##############################################################################
-#  ENVIRONMENTAL FLOWS        
-############  BiOp & Env Flows w mini figs NOT SUMMER  ############    
-    elif plot_num == 103:
-        plt.close()
-        window = binomial_window(15)
-        num_locs = len(res_data_list)
-        figsize=[(1.1,0.8) for i in range(num_locs)]
-        figsize.append((1.1,0.8))
-        figsize_leg = (1.1,0.8)        
-        
-        # Get EF & BiOp rules
-        EFrules = get_EFrules()
-        EF_rules_list = [EFrules[key] for key in EFrules]
-        EF_rules_list = sorted(EF_rules_list, key=lambda x: x[0])  # order list by number
-        EF_rules_list = [EF_rules_list[i][1] for i in range(num_locs)]
-        
-        # Calculate Baseline
-        file_nm = res_data_file
-        baseline = {}
-        for key in SimulatedHistoric:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',SimulatedHistoric[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
-            baseline.update({key:[np.mean(viols1[i]) for i in range(num_locs)]})  
-        
-        data_to_stack = []
-        for key in scenarios:
-            data1=[mfx(file_nm[i].replace(file_baseline+'Run0',scenarios[key]), column=res_data_EF_col[i], skip=cst.day_of_year_oct1) for i in range(num_locs)]
-            num_yrs = np.shape(data1[0])[0]       
-            viols1 = [RuleReliability(data1[i],num_yrs, EF_rules_list[i], season='not_summer') for i in range(num_locs)]  # num of rule violations per year
-            data_to_stack.append([np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)])  
-            if key == baseline_case:
-                viols_smthd = [np.subtract(movingaverage(viols1[i],window), baseline[scenarios_own[key]][i]) for i in range(num_locs)]
-
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(num_locs)]
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(num_locs)] 
-        upper = [np.max(data_stacked[i][8:83],1) for i in range(num_locs)]
-        lower = [np.min(data_stacked[i][8:83],1) for i in range(num_locs)]
+            x,y=WBmap(c_Longs_Temps,c_Lats_Temps)
+            startcolor = 'blue'
+            midcolor1 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1, endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0.,vmax=1.)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction discharge decrease with warmest avg Feb - Apr temps',size=10)
+            cbar.ax.tick_params(labelsize=9) 
             
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(num_locs)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(num_locs)]))
-        viols_smthd = [viols_smthd[i][8:83] for i in range(num_locs)]
-        xctr = 0.5
-        yctr = 0.75
-        
-        redblue = ['blue','red']
-        num_yrs = len(viols_smthd[0])
-        write_tinyfigs2(viols_smthd, upper, lower, figsize,
-                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
-        
-        ylabel = r'$\Delta \,Reliab\,$ [days]'
-        xlabel = 'Red = less Non-Summer reliability'
-        write_legend2(viols_smthd[0], upper[0], lower[0],figsize_leg,
-                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5, which_legend = 'EFs')
-               
-        
-        title = "Non-Summer Reliability of BiOp and Env Flows"
-        file_graphics = 'change_in_Biop-EF_NONsummer_reliability_wGrphs.png'        
-        graphs = range(num_locs+1); graphs.remove(0)
-
-        EFlats_tweaked = EFlats
-#        EFlats_tweaked[7] = EFlats_tweaked[7] + 0.03
-        EFlats_tweaked[6] = EFlats_tweaked[6] + 0.03
-        EFlats_tweaked[3] = EFlats_tweaked[3] + 0.03
-        write_map(title, EFlons, EFlats_tweaked, file_graphics, get_metadata(file_nm[0]), 
-                  shp, graphs=graphs, lons2=dam_data_lons, lats2=dam_data_lats)
-
-##############################################################################
-#  SNOW and PRECIP CORRELATIONS        
-############  Correlations of discharge to SWE  ############    
-
-    elif plot_num == 201:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        num_gauge_sig = len(Q_SWE1_sig)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title(mth_name+" Discharge & Apr 1 SWE")
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_SWE1_sig)/data1_2nd_lgst,10.,20000.)
-        
-        colord = np.array(SWE_frac_sig)
-        
-        x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
-        startcolor = 'blue'
-        midcolor1 = '#B24700'
-        midcolor2 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with median Apr 1 SWE',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'Q_Apr1SWE_correlations '+mth_name+'.png'     
-        plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
-        plt.close()       
-        
-##############################################################################
-#  SNOW and PRECIP CORRELATIONS        
-############  Correlations of discharge to PRECIP  ############    
-
-    elif plot_num == 202:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        
-        num_gauge_sig = len(Q_PRE1_sig)
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Feb - Apr Precip")
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
-        
-        colord = np.array(PRE_frac_sig)
-        
-        x,y=WBmap(c_Longs_PRE,c_Lats_PRE)
-        startcolor = 'blue'
-        midcolor1 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'Q_Feb-AprPrecip_correlations.png'     
-        plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
-                verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
-        plt.close()       
-
-        
-##############################################################################
-#  SNOW and PRECIP CORRELATIONS        MODEL
-############  Correlations of discharge to SNOW  ############    
-
-    elif plot_num == 203:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        scenario = file_historical
-        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
-        file_nm_WBSWE = data_path + 'Snow_(mm)'+scenario+'Run0.csv'
-        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
-        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
-        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
-        for j in range(num_gauge_csv): 
-            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
-            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
-            c_Lats_model.append(gauge_info_csv[j][3])
-            c_Longs_model.append(gauge_info_csv[j][4])
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        num_yrs = np.shape(data1[0])[0]
-        shft = 365 - cst.day_of_year_oct1
-        jul1 = cst.day_of_year_jul1 + shft
-        aug31 = cst.day_of_year_aug31 + shft
-        first_day = jul1
-        last_day = aug31
-        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
-        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
-        data1=mfx(file_nm_WBSWE,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
-        apr1 = cst.day_of_year_apr1 + shft
-        Apr1_SWE_by_yr = [nrc(data1,[j,apr1],[j,apr1]) for j in range(num_yrs)] 
-        Apr1_SWE_by_yr_norm = np.array(Apr1_SWE_by_yr)/np.median(Apr1_SWE_by_yr)  # normalized SWE to median Apr 1
-        regression_stats = [stats.linregress(Apr1_SWE_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
-        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
-        Q_SWE1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
-        SWE_frac1 = [regression_stats[i][0]/Q_SWE1_sig[i] for i in range(num_records)]
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Apr 1 SWE Model")
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_SWE1_sig)/data1_2nd_lgst,10.,20000.)
-        
-        colord = np.array(SWE_frac1)
-        
-        x,y=WBmap(c_Longs_model,c_Lats_model)
-        startcolor = 'blue'
-        midcolor1 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with avg F',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'Q_Apr1SWE_correlations_model.png'     
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
-        plt.close()   
-        
-##############################################################################
-#  SNOW and PRECIP CORRELATIONS             MODEL      
-############  Correlations of discharge to Precip  ############    
-
-    elif plot_num == 204:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        scenario = file_historical
-        file_nm = data_path + 'Discharge_(Subbasins)'+scenario+'Run0.csv'
-        file_nm_WBPrecip = data_path + 'Climate'+scenario+'Run0.csv'
-        data1=[mfx(file_nm,column=subbasin_data_order[i],skip=cst.day_of_year_oct1) for i in range(11)] # skip N end of Willamette R by going to 11 instead of 12
-        c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
-        c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
-        c_Lats_model = c_Lats_model[:-1]    # skip N end of Willamette by dropping last location
-        c_Longs_model = c_Longs_model[:-1]  # skip N end of Willamette by dropping last location
-        for j in range(num_gauge_csv): 
-            file_nm_csv = data_path + gauge_info_csv[j][0] + scenario + 'run0.csv'
-            data1.append(mfx(file_nm_csv,column=1,skip=cst.day_of_year_oct1))
-            c_Lats_model.append(gauge_info_csv[j][3])
-            c_Longs_model.append(gauge_info_csv[j][4])
-        data1[7] = data1[7] - data1[8]  # correct N Santiam for S Santiam contribution
-        num_yrs = np.shape(data1[0])[0]
-        shft = 365 - cst.day_of_year_oct1
-        jul1 = cst.day_of_year_jul1 + shft
-        aug31 = cst.day_of_year_aug31 + shft
-        first_day = jul1
-        last_day = aug31
-        num_records = 11 + num_gauge_csv  # skip N end of Willamette R by going to 11 instead of 12
-        summer_Q_by_yr = [[nrc(data1[i],[j,first_day],[j,last_day]) for j in range(num_yrs)] for i in range(num_records)]  # Start of summer = day 260, end = day 350
-        data1=mfx(file_nm_WBPrecip,column=2,skip=cst.day_of_year_oct1)  # column 2 is high-elevation snow (roughly equiv to snotel data)
-        feb1  = cst.day_of_year_feb1 + shft
-        apr30 = cst.day_of_year_apr30 + shft
-        spring_Precip_by_yr = [nrc(data1,[j,feb1],[j,apr30]) for j in range(num_yrs)] 
-        spring_Precip_by_yr_norm = np.array(spring_Precip_by_yr)/np.median(spring_Precip_by_yr)  # normalized SWE to median Apr 1
-        regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
-        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
-        Q_Precip1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_records)]
-        Precip_frac1 = [regression_stats[i][0]/Q_Precip1_sig[i] for i in range(num_records)]
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-#        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
-        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Feb - Apr Precip Model")
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_Precip1_sig)/data1_2nd_lgst,10.,20000.)
-        
-        colord = np.array(Precip_frac1)
-        
-        x,y=WBmap(c_Longs_model,c_Lats_model)
-        startcolor = 'blue'
-        midcolor1 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge increase with avg Feb - Apr Precip',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'Q_Feb-AprPrecip_correlations_model.png'     
-        plt.text(0., 0, get_metadata(file_nm), fontsize=3,verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
-        plt.close()      
-
-
-##############################################################################
-#  TEMPERATURE CORRELATIONS        
-############  Correlations of discharge to Temperature  ############    
-
-    elif plot_num == 205:
-        fig = plt.figure(figsize=(6,8))
-        ax2 = fig.add_axes()
-        plt.axes(frameon=False)
-        file_nm_temp = 'C:\\code\\maplot\\' + 'Willamette Basin Monthly temperature 1895 forward.csv'
-        start_yr, end_yr, tmax = mfx(file_nm_temp,column=1,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
-        tmax = tmax/10.
-        start_yr, end_yr, tmin = mfx(file_nm_temp,column=2,day_of_year_start=cst.day_of_year_oct1+1,filetype='csv',read_date_column=True,date_column=0,missing_data_flag=-9999)
-        tmin = tmin/10.
-        tavg = (tmax + tmin)/2.
-        shft = 365 - cst.day_of_year_oct1
-        feb1 =  cst.day_of_year_feb1  + shft
-        apr30 = cst.day_of_year_apr30 + shft
-        num_yrs = 2006 - 1979 + 1
-        spring_Temp_avg = nrc(tavg,[0,feb1],[58,apr30]) 
-        spring_Temp_by_yr = [nrc(tavg,[j,feb1],[j,apr30]) for j in range(1979-start_yr,2006+1-start_yr)]
-        Q_Temps = []
-        c_Lats_Temps = []
-        c_Longs_Temps = []
-        for i in range(num_Q_full):
-            for j in range(num_gauge):
-                if Q_pandas[i].name == gage_num[j]:
-                    Q_Temps.append(np.array(Q_pandas[i][:-8]))
-                    c_Lats_Temps.append(c_Lats[j])
-                    c_Longs_Temps.append(c_Longs[j])
- 
-        spring_Temp_by_yr_norm = (np.array(spring_Temp_by_yr) - np.ones_like(spring_Temp_by_yr)*spring_Temp_avg)/\
-                                    (np.max(spring_Temp_by_yr) - np.average(spring_Temp_by_yr))   # normalize spring temps
-        regression_stats = [stats.linregress(spring_Temp_by_yr,Q_Temps[i]) for i in range(num_Q_full)]
-
-#       regression_stats = [stats.linregress(spring_Precip_by_yr_norm,summer_Q_by_yr[i]) for i in range(num_records)]
-        # linregress returns slope, intercept, r-value, p-value, and standard error.  r-square is r-value **2
-        Q_Temp1_sig = [regression_stats[i][0]+regression_stats[i][1] for i in range(num_Q_full)]
-        Temp_frac1 = [-1*regression_stats[i][0]/Q_Temp1_sig[i] for i in range(num_Q_full)]
-        for i in range(num_Q_full-1,-1,-1): # count back from end of list
-            if regression_stats[i][3] > significance_cutoff:   # zero out parts of list that are not significant
-                del(regression_stats[i])
-                del(Q_Temp1_sig[i])
-                del(Temp_frac1[i])
-                del(c_Longs_Temps[i])
-                del(c_Lats_Temps[i])
-        
-        WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
-                    urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
-        im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
-        WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
-        WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Feb - Apr Temperature")
-        
-        import heapq
-        data1_2nd_lgst = heapq.nlargest(2, Q_Temp1_sig)[1]  #find second-largest number
-        data1_size = np.clip(500.*np.array(Q_Temp1_sig)/data1_2nd_lgst,10.,20000.)
-        
-        colord = np.array(Temp_frac1)
-        
-        x,y=WBmap(c_Longs_Temps,c_Lats_Temps)
-        startcolor = 'blue'
-        midcolor1 = 'red'
-        endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1, endcolor],128)
-        m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0.,vmax=1.)
-        # add colorbar.
-        cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-        cbar.set_label('fraction discharge decrease with warmest avg Feb - Apr temps',size=10)
-        cbar.ax.tick_params(labelsize=9) 
-        
-        file_graphics = 'Q_Feb-AprTemp_correlations.png'     
-        plt.text(0., 0, get_metadata(file_nm_temp), fontsize=3,verticalalignment='top')        
-        #plt.show()
-        plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
-        plt.close()      
+            file_graphics = 'Q_Feb-AprTemp_correlations.png'     
+            plt.text(0., 0, get_metadata(file_nm_temp), fontsize=3,verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()      
