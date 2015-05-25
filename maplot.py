@@ -523,7 +523,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 ###############################################################################
-for doyloop in range(1,120):
+for doyloop in range(0,150):
     # Map boundaries
     lat_bounds = 43.31342817420548, 45.84870876153576
     long_bounds = -121.401130054521,-124.151784119791
@@ -620,7 +620,7 @@ for doyloop in range(1,120):
         for gage in gage_list:
             gage_num_tmp = gage[0]
             gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
-            moy = 7
+            moy = 8
             if moy == 7:
                 mth_name = 'Jul'
             elif moy == 8:
@@ -1728,7 +1728,7 @@ for doyloop in range(1,120):
             
             import heapq
             data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
-            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/900.,10.,20000.)
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/1200.,10.,20000.)
             
             colord = np.array(SWE_frac_sig)
             
