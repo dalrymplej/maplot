@@ -597,23 +597,78 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
+    significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
+    gg = imp.load_source('get_avg_discharge_by_moy','C:\\code\\usgs-gauges\\gageroutines.py')    
+    gg = imp.load_source('get_avg_discharge_by_month','C:\\code\\usgs-gauges\\gageroutines.py')    
+    gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')    
+    gg = imp.load_source('reassign_by_yr','C:\\code\usgs-gauges\\gageroutines.py')
     snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
     snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
-    print snow_basin_index_doy
+    snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+    gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+    gage_num = []
+    c_Lats = []
+    c_Longs = []
+    Q_SWE0 = []
+    Delta_Q_SWE1 = []
+    Q_SWE1 = []
+    R2_SWE = []
+    p_value_SWE = []
+    SWE_frac = []
+    for gage in gage_list:
+        gage_num_tmp = gage[0]
+        gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+        moy = 10
+        if moy == 7:
+            mth_name = 'Jul'
+        elif moy == 8:
+            mth_name = 'Aug'
+        elif moy ==9:
+            mth_name = 'Sep'
+        elif moy ==10:
+            mth_name = 'Oct'
+        gage_Aug_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+        gage_Aug_df = gg.reassign_by_yr(gage_Aug_df)
+        snow_and_gage_df = pd.concat([snow_basin_index,gage_Aug_df],axis=1)
+        snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
+        # slope, intercept, r_value, p_value, std_err
+        regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
+        slope = regression_stats_sg[0]
+        p_value = regression_stats_sg[3]
+        if p_value <= significance_cutoff: 
+            gage_num.append(gage[0])
+            c_Lats.append(gage[1])
+            c_Longs.append(gage[2])
+            Q_SWE0.append(regression_stats_sg[1])
+            Delta_Q_SWE1.append(slope)
+            Q_SWE1.append(slope + regression_stats_sg[1])
+            R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+            p_value_SWE.append(regression_stats_sg[3])
+            SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+        elif slope < 0.1 and p_value < 0.3: 
+            gage_num.append(gage[0])
+            c_Lats.append(gage[1])
+            c_Longs.append(gage[2])
+            Q_SWE0.append(0.)
+            Delta_Q_SWE1.append(slope)
+            Q_SWE1.append(regression_stats_sg[1])
+            R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+            p_value_SWE.append(regression_stats_sg[3])
+            SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
     # Read a parameter file in xls format.
     Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
-    Gauge_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
-    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
-    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
-    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
-    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
-    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
-    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
-    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
-    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
-    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
+#    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
+#    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
+#    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
+#    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
+#    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
+#    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
+#    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
+#    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+#    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+#    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
     
     Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
     Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
@@ -638,10 +693,10 @@ if correlations_loop:
     gauge_info_csv = get_gauge_info()
     num_gauge_csv = len(gauge_info_csv)
     for i in range(num_gauge-1,-1,-1): # count back from end of list
-        c_Longs_SWE[i] = -1*c_Longs_SWE[i]
+#        c_Longs_SWE[i] = c_Longs_SWE[i]
         for j in range(num_gauge_csv):
-            if gauge_info_csv[j][1] == Gauge_num[i]:
-                gauge_info_csv[j].extend([Gauge_loc[i],c_Lats[i],-1*c_Longs[i]])
+            if gauge_info_csv[j][1] == gage_num[i]:
+                gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
                 
         if SWE_frac[i] < 0.: SWE_frac[i] = 0.
         if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
@@ -654,15 +709,15 @@ if correlations_loop:
             del(p_value_SWE[i])
             del(SWE_frac[i])
     num_gauge_SWE = len(Q_SWE0)
-    for j in range(num_gauge_csv-1,-1,-1):
-        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
-            del(gauge_info_csv[j])
-    num_gauge_csv = len(gauge_info_csv)
+#    for j in range(num_gauge_csv-1,-1,-1):
+#        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
+#            del(gauge_info_csv[j])
+#    num_gauge_csv = len(gauge_info_csv)
     
     c_Lats_PRE = list(c_Lats)
     c_Longs_PRE = list(c_Longs)
     for i in range(num_gauge-1,-1,-1): # count back from end of list
-        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
+#        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
         if PRE_frac[i] < 0.: PRE_frac[i] = 0.
         if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
             del(c_Lats_PRE[i])
@@ -676,7 +731,6 @@ if correlations_loop:
     num_gauge_PRE = len(Q_PRE0)
     
     
-    significance_cutoff = 0.1
     Q_SWE1_sig = list(Q_SWE1)
     SWE_frac_sig = list(SWE_frac)
     for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
@@ -703,7 +757,7 @@ if correlations_loop:
     c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
     c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
     
-    plots_to_plot.extend([201, 202, 205])
+    plots_to_plot.extend([201])
     
 
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1670,7 +1724,7 @@ for plot_num in plots_to_plot:
         im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
         WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
         WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-        plt.title("Jul - Aug Discharge & Apr 1 SWE")
+        plt.title(mth_name+" Discharge & Apr 1 SWE")
         
         import heapq
         data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
@@ -1680,16 +1734,17 @@ for plot_num in plots_to_plot:
         
         x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
         startcolor = 'blue'
-        midcolor1 = 'red'
+        midcolor1 = '#B24700'
+        midcolor2 = 'red'
         endcolor = 'black' #'#4C0000'
-        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+        cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
         m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
         # add colorbar.
         cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
         cbar.set_label('fraction discharge increase with median Apr 1 SWE',size=10)
         cbar.ax.tick_params(labelsize=9) 
         
-        file_graphics = 'Q_Apr1SWE_correlations.png'     
+        file_graphics = 'Q_Apr1SWE_correlations '+mth_name+'.png'     
         plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
                 verticalalignment='top')        
         #plt.show()
@@ -1905,10 +1960,10 @@ for plot_num in plots_to_plot:
         c_Longs_Temps = []
         for i in range(num_Q_full):
             for j in range(num_gauge):
-                if Q_pandas[i].name == Gauge_num[j]:
+                if Q_pandas[i].name == gage_num[j]:
                     Q_Temps.append(np.array(Q_pandas[i][:-8]))
                     c_Lats_Temps.append(c_Lats[j])
-                    c_Longs_Temps.append(-1*c_Longs[j])
+                    c_Longs_Temps.append(c_Longs[j])
  
         spring_Temp_by_yr_norm = (np.array(spring_Temp_by_yr) - np.ones_like(spring_Temp_by_yr)*spring_Temp_avg)/\
                                     (np.max(spring_Temp_by_yr) - np.average(spring_Temp_by_yr))   # normalize spring temps
