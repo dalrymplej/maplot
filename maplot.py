@@ -524,7 +524,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 firstloop = True
-for doyloop in range(135,304,7):
+for doyloop in range(1):
     # Map boundaries
     lat_bounds = 43.31342817420548, 45.84870876153576
     long_bounds = -121.401130054521,-124.151784119791
