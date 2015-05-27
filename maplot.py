@@ -523,7 +523,8 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 ###############################################################################
-for doyloop in range(23,151):
+firstloop = True
+for doyloop in range(135,304,7):
     # Map boundaries
     lat_bounds = 43.31342817420548, 45.84870876153576
     long_bounds = -121.401130054521,-124.151784119791
@@ -602,12 +603,16 @@ for doyloop in range(23,151):
         snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
         gg = imp.load_source('get_avg_discharge_by_moy','C:\\code\\usgs-gauges\\gageroutines.py')    
         gg = imp.load_source('get_avg_discharge_by_month','C:\\code\\usgs-gauges\\gageroutines.py')    
-        gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')    
+        gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')
+        gg = imp.load_source('gage_data_filtered', 'C:\\code\\usgs-gauges\\gageroutines.py')
         gg = imp.load_source('reassign_by_yr','C:\\code\usgs-gauges\\gageroutines.py')
-        snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
-        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
-        snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
-        gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+        if firstloop:
+            snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+            snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
+#s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
+            snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+            gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+            firstloop = False
         gage_num = []
         c_Lats = []
         c_Longs = []
@@ -619,19 +624,25 @@ for doyloop in range(23,151):
         SWE_frac = []
         for gage in gage_list:
             gage_num_tmp = gage[0]
-            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
-            moy = 8
-            if moy == 7:
-                mth_name = 'Jul'
-            elif moy == 8:
-                mth_name = 'Aug'
-            elif moy ==9:
-                mth_name = 'Sep'
-            elif moy ==10:
-                mth_name = 'Oct'
-            gage_Aug_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
-            gage_Aug_df = gg.reassign_by_yr(gage_Aug_df)
-            snow_and_gage_df = pd.concat([snow_basin_index,gage_Aug_df],axis=1)
+            gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                     file_name = '', index_col = 2, 
+                     local_path = 'C:\\code\\Willamette Basin gauge data\\')
+            gage_df = gg.reassign_by_yr(gage_df_doy)
+            snow_and_gage_df = pd.concat([snow_basin_index,gage_df],axis=1)
+            mth_name = 'DOY '+ str(doyloop)
+#s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+#s_lp            moy = 8
+#s_lp            if moy == 7:
+#s_lp                mth_name = 'Jul'
+#s_lp            elif moy == 8:
+#s_lp                mth_name = 'Aug'
+#s_lp            elif moy ==9:
+#s_lp                mth_name = 'Sep'
+#s_lp            elif moy ==10:
+#s_lp                mth_name = 'Oct'
+#s_lp            gage_mth_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+#s_lp            gage_mth_df = gg.reassign_by_yr(gage_mth_df)
+#s_lp            snow_and_gage_df = pd.concat([snow_basin_index,gage_mth_df],axis=1)
             snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
             # slope, intercept, r_value, p_value, std_err
             regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
@@ -639,8 +650,8 @@ for doyloop in range(23,151):
             p_value = regression_stats_sg[3]
             if p_value <= significance_cutoff: 
                 gage_num.append(gage[0])
-                c_Lats.append(gage[1])
-                c_Longs.append(gage[2])
+                c_Lats.append(gage[2])
+                c_Longs.append(gage[3])
                 Q_SWE0.append(regression_stats_sg[1])
                 Delta_Q_SWE1.append(slope)
                 Q_SWE1.append(slope + regression_stats_sg[1])
@@ -649,8 +660,8 @@ for doyloop in range(23,151):
                 SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
 #            elif slope < 0.1 and p_value < 0.3: 
 #                gage_num.append(gage[0])
-#                c_Lats.append(gage[1])
-#                c_Longs.append(gage[2])
+#                c_Lats.append(gage[2])
+#                c_Longs.append(gage[3])
 #                Q_SWE0.append(0.)
 #                Delta_Q_SWE1.append(slope)
 #                Q_SWE1.append(regression_stats_sg[1])
@@ -1724,11 +1735,13 @@ for doyloop in range(23,151):
             im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
             WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
             WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" SWE")
+            plt.title(mth_name+" Discharge & Day of Year Apr 1 SWE")
+#s_lp            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" SWE")
             
             import heapq
             data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
-            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/1200.,10.,20000.)
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/3000.,10.,20000.)
+#s_lp            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/1200.,10.,20000.)
             
             colord = np.array(SWE_frac_sig)
             
