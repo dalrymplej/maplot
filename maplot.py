@@ -523,7 +523,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 ###############################################################################
-for doyloop in range(0,150):
+for doyloop in range(23,151):
     # Map boundaries
     lat_bounds = 43.31342817420548, 45.84870876153576
     long_bounds = -121.401130054521,-124.151784119791
@@ -647,16 +647,16 @@ for doyloop in range(0,150):
                 R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
                 p_value_SWE.append(regression_stats_sg[3])
                 SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-            elif slope < 0.1 and p_value < 0.3: 
-                gage_num.append(gage[0])
-                c_Lats.append(gage[1])
-                c_Longs.append(gage[2])
-                Q_SWE0.append(0.)
-                Delta_Q_SWE1.append(slope)
-                Q_SWE1.append(regression_stats_sg[1])
-                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
-                p_value_SWE.append(regression_stats_sg[3])
-                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+#            elif slope < 0.1 and p_value < 0.3: 
+#                gage_num.append(gage[0])
+#                c_Lats.append(gage[1])
+#                c_Longs.append(gage[2])
+#                Q_SWE0.append(0.)
+#                Delta_Q_SWE1.append(slope)
+#                Q_SWE1.append(regression_stats_sg[1])
+#                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+#                p_value_SWE.append(regression_stats_sg[3])
+#                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
         # Read a parameter file in xls format.
         Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
     #    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
