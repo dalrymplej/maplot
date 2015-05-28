@@ -524,7 +524,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
 ###############################################################################
 ###############################################################################
 firstloop = True
-for doyloop in range(1):
+for doyloop in range(142,305,7):
     # Map boundaries
     lat_bounds = 43.31342817420548, 45.84870876153576
     long_bounds = -121.401130054521,-124.151784119791
@@ -598,6 +598,8 @@ for doyloop in range(1):
         dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
         
     if correlations_loop:
+        plots_to_plot.extend([202])
+        plot_num = 202
         significance_cutoff = 0.1
         snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
         snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -606,149 +608,216 @@ for doyloop in range(1):
         gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')
         gg = imp.load_source('gage_data_filtered', 'C:\\code\\usgs-gauges\\gageroutines.py')
         gg = imp.load_source('reassign_by_yr','C:\\code\usgs-gauges\\gageroutines.py')
+        pp = imp.load_source('get_precip_data','C:\\code\\usgs-gauges\\preciproutines.py')
+        pp = imp.load_source('get_precip_by_moyrange','C:\\code\\usgs-gauges\\preciproutines.py')
+        pp = imp.load_source('reassign_by_wyr','C:\\code\\usgs-gauges\\preciproutines.py')
+        pp = imp.load_source('basin_index','C:\\code\\usgs-gauges\\preciproutines.py')
+        
         if firstloop:
-            snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
-            snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
-#s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
-            snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+            if plot_num == 201:
+                snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+                snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
+    #s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
+                snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+            
+            elif plot_num == 202:
+                precip_df = pp.get_precip_data(local_path = 'C:\\code\\Willamette Basin precip data\\')
+                precip_by_moyrange = pp.get_precip_by_moyrange(precip_df,2,4)
+                precip_by_wy = pp.reassign_by_wyr(precip_by_moyrange)
+                precip_basin_index = pp.basin_index(precip_by_wy)
+                precip_basin_index = gg.reassign_by_yr(precip_basin_index) #place at end of year
             gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
             firstloop = False
         gage_num = []
         c_Lats = []
         c_Longs = []
-        Q_SWE0 = []
-        Delta_Q_SWE1 = []
-        Q_SWE1 = []
-        R2_SWE = []
-        p_value_SWE = []
-        SWE_frac = []
-        for gage in gage_list:
-            gage_num_tmp = gage[0]
-            gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
-                     file_name = '', index_col = 2, 
-                     local_path = 'C:\\code\\Willamette Basin gauge data\\')
-            gage_df = gg.reassign_by_yr(gage_df_doy)
-            snow_and_gage_df = pd.concat([snow_basin_index,gage_df],axis=1)
-            mth_name = 'DOY '+ str(doyloop)
-#s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
-#s_lp            moy = 8
-#s_lp            if moy == 7:
-#s_lp                mth_name = 'Jul'
-#s_lp            elif moy == 8:
-#s_lp                mth_name = 'Aug'
-#s_lp            elif moy ==9:
-#s_lp                mth_name = 'Sep'
-#s_lp            elif moy ==10:
-#s_lp                mth_name = 'Oct'
-#s_lp            gage_mth_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
-#s_lp            gage_mth_df = gg.reassign_by_yr(gage_mth_df)
-#s_lp            snow_and_gage_df = pd.concat([snow_basin_index,gage_mth_df],axis=1)
-            snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
-            # slope, intercept, r_value, p_value, std_err
-            regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
-            slope = regression_stats_sg[0]
-            p_value = regression_stats_sg[3]
-            if p_value <= significance_cutoff: 
-                gage_num.append(gage[0])
-                c_Lats.append(gage[2])
-                c_Longs.append(gage[3])
-                Q_SWE0.append(regression_stats_sg[1])
-                Delta_Q_SWE1.append(slope)
-                Q_SWE1.append(slope + regression_stats_sg[1])
-                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
-                p_value_SWE.append(regression_stats_sg[3])
-                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-#            elif slope < 0.1 and p_value < 0.3: 
-#                gage_num.append(gage[0])
-#                c_Lats.append(gage[2])
-#                c_Longs.append(gage[3])
-#                Q_SWE0.append(0.)
-#                Delta_Q_SWE1.append(slope)
-#                Q_SWE1.append(regression_stats_sg[1])
-#                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
-#                p_value_SWE.append(regression_stats_sg[3])
-#                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-        # Read a parameter file in xls format.
-        Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
-    #    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
-    #    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
-    #    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
-    #    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
-    #    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
-    #    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
-    #    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
-    #    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
-    #    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
-    #    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
         
-        Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
-        Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
-        Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(19)[1:]
-        R2_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(20)[1:]
-        p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
-        PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
+        if plot_num == 201:
+            Q_SWE0 = []
+            Delta_Q_SWE1 = []
+            Q_SWE1 = []
+            R2_SWE = []
+            p_value_SWE = []
+            SWE_frac = []
+            for gage in gage_list:
+                gage_num_tmp = gage[0]
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                         file_name = '', index_col = 2, 
+                         local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                gage_df = gg.reassign_by_yr(gage_df_doy)
+                snow_and_gage_df = pd.concat([snow_basin_index,gage_df],axis=1)
+                mth_name = 'DOY '+ str(doyloop)
+    #s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+    #s_lp            moy = 8
+    #s_lp            if moy == 7:
+    #s_lp                mth_name = 'Jul'
+    #s_lp            elif moy == 8:
+    #s_lp                mth_name = 'Aug'
+    #s_lp            elif moy ==9:
+    #s_lp                mth_name = 'Sep'
+    #s_lp            elif moy ==10:
+    #s_lp                mth_name = 'Oct'
+    #s_lp            gage_mth_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+    #s_lp            gage_mth_df = gg.reassign_by_yr(gage_mth_df)
+    #s_lp            snow_and_gage_df = pd.concat([snow_basin_index,gage_mth_df],axis=1)
+                snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
+                # slope, intercept, r_value, p_value, std_err
+                regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
+                slope = regression_stats_sg[0]
+                p_value = regression_stats_sg[3]
+                if p_value <= significance_cutoff: 
+                    gage_num.append(gage[0])
+                    c_Lats.append(gage[2])
+                    c_Longs.append(gage[3])
+                    Q_SWE0.append(regression_stats_sg[1])
+                    Delta_Q_SWE1.append(slope)
+                    Q_SWE1.append(slope + regression_stats_sg[1])
+                    R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+                    p_value_SWE.append(regression_stats_sg[3])
+                    SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+    #            elif slope < 0.1 and p_value < 0.3: 
+    #                gage_num.append(gage[0])
+    #                c_Lats.append(gage[2])
+    #                c_Longs.append(gage[3])
+    #                Q_SWE0.append(0.)
+    #                Delta_Q_SWE1.append(slope)
+    #                Q_SWE1.append(regression_stats_sg[1])
+    #                R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+    #                p_value_SWE.append(regression_stats_sg[3])
+    #                SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+            # Read a parameter file in xls format.
+    #        Q_SWE_PRE_params = xlrd.open_workbook('Q-SWE-PRE.xlsx')
+        #    gage_num = Q_SWE_PRE_params.sheet_by_index(2).col_values(0)[1:]
+        #    Gauge_loc = Q_SWE_PRE_params.sheet_by_index(2).col_values(1)[1:]
+        #    c_Lats = Q_SWE_PRE_params.sheet_by_index(2).col_values(5)[1:]
+        #    c_Longs = Q_SWE_PRE_params.sheet_by_index(2).col_values(6)[1:]
+        #    Q_SWE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(7)[1:]
+        #    Delta_Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(8)[1:]
+        #    Q_SWE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(9)[1:]
+        #    R2_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(10)[1:]
+        #    p_value_SWE = Q_SWE_PRE_params.sheet_by_index(2).col_values(11)[1:]
+        #    SWE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(12)[1:]
         
-        df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
-        df = df.convert_objects(convert_numeric=True)
-        Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
-        Q_pandas = [Q_pandas[i][:-1] for i in range(39)]
-        for i in range(38,-1,-1):
-            num_nulls = Q_pandas[i].isnull().sum()
-            if Q_pandas[i].isnull().sum() > 0: 
-                del Q_pandas[i]
-        num_Q_full = len(Q_pandas)
+        elif plot_num == 202:
+            Q_PRE0 = []
+            Delta_Q_PRE1 = []
+            Q_PRE1 = []
+            R2_PRE = []
+            p_value_PRE = []
+            PRE_frac = []
+    #        Q_PRE0 = Q_SWE_PRE_params.sheet_by_index(2).col_values(17)[1:]
+    #        Delta_Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(18)[1:]
+    #        Q_PRE1 = Q_SWE_PRE_params.sheet_by_index(2).col_values(19)[1:]
+    #        R2_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(20)[1:]
+    #        p_value_PRE = Q_SWE_PRE_params.sheet_by_index(2).col_values(21)[1:]
+    #        PRE_frac = Q_SWE_PRE_params.sheet_by_index(2).col_values(22)[1:]
+            
+            for gage in gage_list:
+                gage_num_tmp = gage[0]
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                         file_name = '', index_col = 2, 
+                         local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                gage_df = gg.reassign_by_yr(gage_df_doy)
+                precip_and_gage_df = pd.concat([precip_basin_index,gage_df],axis=1)['19690930':'20160101']  #cut out pre-dam history
+                mth_name = 'DOY '+ str(doyloop)
+    #s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+    #s_lp            moy = 8
+    #s_lp            if moy == 7:
+    #s_lp                mth_name = 'Jul'
+    #s_lp            elif moy == 8:
+    #s_lp                mth_name = 'Aug'
+    #s_lp            elif moy ==9:
+    #s_lp                mth_name = 'Sep'
+    #s_lp            elif moy ==10:
+    #s_lp                mth_name = 'Oct'
+    #s_lp            gage_mth_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+    #s_lp            gage_mth_df = gg.reassign_by_yr(gage_mth_df)
+    #s_lp            snow_and_gage_df = pd.concat([snow_basin_index,gage_mth_df],axis=1)
+                precip_and_gage = np.array(precip_and_gage_df.dropna(axis=0, how='any'))
+                # slope, intercept, r_value, p_value, std_err
+                regression_stats_sg = stats.linregress(precip_and_gage[:,0],precip_and_gage[:,2]) 
+                slope = regression_stats_sg[0]
+                p_value = regression_stats_sg[3]
+                if p_value <= significance_cutoff: 
+                    gage_num.append(gage[0])
+                    c_Lats.append(gage[2])
+                    c_Longs.append(gage[3])
+                    Q_PRE0.append(regression_stats_sg[1])
+                    Delta_Q_PRE1.append(slope)
+                    Q_PRE1.append(slope + regression_stats_sg[1])
+                    R2_PRE.append(regression_stats_sg[2]*regression_stats_sg[2])
+                    p_value_PRE.append(regression_stats_sg[3])
+                    PRE_frac.append(Delta_Q_PRE1[-1]/Q_PRE1[-1])
+
+#        df = pd.read_excel('C:\\code\\maplot\\'+'Q-SWE-PRE.xlsx', sheetname=0, header=2, index_col=0)
+#        df = df.convert_objects(convert_numeric=True)
+#        Q_pandas = [pd.Series(df.iloc[:,i],df.index) for i in range(9,48,1)]
+#        Q_pandas = [Q_pandas[i][:-1] for i in range(39)]
+#        for i in range(38,-1,-1):
+#            num_nulls = Q_pandas[i].isnull().sum()
+#            if Q_pandas[i].isnull().sum() > 0: 
+#                del Q_pandas[i]
+#        num_Q_full = len(Q_pandas)
         
-        num_gauge = len(Q_SWE0)
-        c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
-        c_Longs_SWE = list(c_Longs)
+        if plot_num == 201:
+            num_gauge = len(Q_SWE0)
+            c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
+            c_Longs_SWE = list(c_Longs)
+        elif plot_num == 202:
+            num_gauge = len(Q_PRE0)
+            c_Lats_PRE = list(c_Lats)  # need to do it this way because of aliasing
+            c_Longs_PRE = list(c_Longs)
+            
         gauge_info_csv = get_gauge_info()
         num_gauge_csv = len(gauge_info_csv)
-        for i in range(num_gauge-1,-1,-1): # count back from end of list
-    #        c_Longs_SWE[i] = c_Longs_SWE[i]
-            for j in range(num_gauge_csv):
-                if gauge_info_csv[j][1] == gage_num[i]:
-                    gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
-                    
-            if SWE_frac[i] < 0.: SWE_frac[i] = 0.
-            if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
-                del(c_Lats_SWE[i])
-                del(c_Longs_SWE[i])
-                del(Q_SWE0[i])
-                del(Delta_Q_SWE1[i])
-                del(Q_SWE1[i])
-                del(R2_SWE[i])
-                del(p_value_SWE[i])
-                del(SWE_frac[i])
-        num_gauge_SWE = len(Q_SWE0)
+        
+        if plot_num == 201:
+            for i in range(num_gauge-1,-1,-1): # count back from end of list
+        #        c_Longs_SWE[i] = c_Longs_SWE[i]
+                for j in range(num_gauge_csv):
+                    if gauge_info_csv[j][1] == gage_num[i]:
+                        gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
+                        
+                if SWE_frac[i] < 0.: SWE_frac[i] = 0.
+                if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
+                    del(c_Lats_SWE[i])
+                    del(c_Longs_SWE[i])
+                    del(Q_SWE0[i])
+                    del(Delta_Q_SWE1[i])
+                    del(Q_SWE1[i])
+                    del(R2_SWE[i])
+                    del(p_value_SWE[i])
+                    del(SWE_frac[i])
+            num_gauge_SWE = len(Q_SWE0)
     #    for j in range(num_gauge_csv-1,-1,-1):
     #        if gauge_info_csv[j][2] == '' or gauge_info_csv[j][3] == '':
     #            del(gauge_info_csv[j])
     #    num_gauge_csv = len(gauge_info_csv)
         
-        c_Lats_PRE = list(c_Lats)
-        c_Longs_PRE = list(c_Longs)
-        for i in range(num_gauge-1,-1,-1): # count back from end of list
-    #        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
-            if PRE_frac[i] < 0.: PRE_frac[i] = 0.
-            if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
-                del(c_Lats_PRE[i])
-                del(c_Longs_PRE[i])
-                del(Q_PRE0[i])
-                del(Delta_Q_PRE1[i])
-                del(Q_PRE1[i])
-                del(R2_PRE[i])
-                del(p_value_PRE[i])
-                del(PRE_frac[i])
-        num_gauge_PRE = len(Q_PRE0)
-        
+        elif plot_num == 202:
+            c_Lats_PRE = list(c_Lats)
+            c_Longs_PRE = list(c_Longs)
+            for i in range(num_gauge-1,-1,-1): # count back from end of list
+        #        c_Longs_PRE[i] = -1*c_Longs_PRE[i]
+                if PRE_frac[i] < 0.: PRE_frac[i] = 0.
+                if Q_PRE0[i] == '' or Delta_Q_PRE1[i] == '':   # delete parts of list that are empty
+                    del(c_Lats_PRE[i])
+                    del(c_Longs_PRE[i])
+                    del(Q_PRE0[i])
+                    del(Delta_Q_PRE1[i])
+                    del(Q_PRE1[i])
+                    del(R2_PRE[i])
+                    del(p_value_PRE[i])
+                    del(PRE_frac[i])
+            num_gauge_PRE = len(Q_PRE0)
         
         Q_SWE1_sig = list(Q_SWE1)
         SWE_frac_sig = list(SWE_frac)
         for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
             if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
                 SWE_frac_sig[i] = 0.
-        Q_PRE1_sig = Q_PRE1
-        PRE_frac_sig = PRE_frac
+        Q_PRE1_sig = list(Q_PRE1)
+        PRE_frac_sig = list(PRE_frac)
         for i in range(num_gauge_PRE-1,-1,-1): # count back from end of list
             if p_value_PRE[i] > significance_cutoff:   # zero out parts of list that are not significant
                 PRE_frac_sig[i] = 0.
@@ -768,7 +837,6 @@ for doyloop in range(1):
         c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
         c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
         
-        plots_to_plot.extend([201])
         
     
     print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -1774,33 +1842,35 @@ for doyloop in range(1):
             plt.axes(frameon=False)
             
             num_gauge_sig = len(Q_PRE1_sig)
-            
             WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
                         urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
     #        im = plt.imread('C:\\code\\maplot\\ElevationMap_AdditionalRivers.png')
             im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
             WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
             WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-            plt.title("Jul - Aug Discharge & Feb - Apr Precip")
+            plt.title(mth_name+" Discharge & Day of Year Feb-Apr Precip")
+#s_lp            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" Precip")
             
             import heapq
             data1_2nd_lgst = heapq.nlargest(2, Q_PRE1_sig)[1]  #find second-largest number
-            data1_size = np.clip(500.*np.array(Q_PRE1_sig)/data1_2nd_lgst,10.,20000.)
+            data1_size = np.clip(500.*np.array(Q_PRE1_sig)/3000.,10.,20000.)
+#s_lp            data1_size = np.clip(500.*np.array(Q_Precip1_sig)/1200.,10.,20000.)
             
             colord = np.array(PRE_frac_sig)
             
             x,y=WBmap(c_Longs_PRE,c_Lats_PRE)
             startcolor = 'blue'
-            midcolor1 = 'red'
+            midcolor1 = '#B24700'
+            midcolor2 = 'red'
             endcolor = 'black' #'#4C0000'
-            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,endcolor],128)
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
             m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
             # add colorbar.
             cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
-            cbar.set_label('fraction discharge increase with avg Feb - Apr precip',size=10)
+            cbar.set_label('fraction discharge increase with median DOY '+str(doyloop)+' Precip',size=10)
             cbar.ax.tick_params(labelsize=9) 
             
-            file_graphics = 'Q_Feb-AprPrecip_correlations.png'     
+            file_graphics = 'Q_doy'+str(doyloop)+'_Precip_correlations '+mth_name+'.png'     
             plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
                     verticalalignment='top')        
             #plt.show()
