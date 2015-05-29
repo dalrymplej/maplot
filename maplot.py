@@ -49,6 +49,27 @@ def get_EFdata():
             }
             
     return EFdata, DamLocs
+    
+def get_allDamLocs():
+    """ Returns tuple of data for all dam locations"""
+# Lat/long of 8 locations:
+    allDamLocs= {
+            'Hills Creek':              (-122.423156, 43.676881, 1),
+            'Fall Creek':               (-122.739280, 43.951271, 2),
+            'Dexter':                   (-122.787811, 43.913641, 3),
+            'Big Cliff':                (-122.266989, 44.732960, 4),
+            'Foster':                   (-122.641251, 44.414983, 5),
+            'Blue River':               (-122.279801, 44.182290, 6),
+            'Cougar':                   (-122.231298, 44.107187, 7),
+            'Detroit':                  (-122.250739, 44.721682, 8),
+            'Green Peter':              (-122.548650, 44.449654, 9),
+            'Lookout Point':            (-122.752465, 43.914625, 10),
+            'Dorena':                   (-122.955039, 43.786775, 11),
+            'Cottage Grove':            (-123.052858, 43.716259, 12),
+            'Fern Ridge':               (-123.301178, 44.120915, 13)
+            }
+            
+    return allDamLocs
 
 def get_gauge_info():
     """return list of lists containing file name & gauge number"""
@@ -596,7 +617,7 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend([202])
+    plots_to_plot.extend([201])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -610,18 +631,12 @@ if correlations_loop:
     pp = imp.load_source('reassign_by_wyr','C:\\code\\usgs-gauges\\preciproutines.py')
     pp = imp.load_source('basin_index','C:\\code\\usgs-gauges\\preciproutines.py')
             
-    subbasin_data_list = [subbasin_data[key] for key in subbasin_data]
-    subbasin_data_list = sorted(subbasin_data_list,key=lambda x: x[2])  # order list by column number
-    subbasin_data_lons = [subbasin_data_list[i][4] for i in range(len(subbasin_data_list))]
-    subbasin_data_lats = [subbasin_data_list[i][5] for i in range(len(subbasin_data_list))]
-    subbasin_data_order = [subbasin_data_list[i][2] for i in range(len(subbasin_data_list))]
-    subbasin_data_area = [subbasin_data_list[i][3] for i in range(len(subbasin_data_list))]
-    subbasin_data_climate_col = [subbasin_data_list[i][6] for i in range(len(subbasin_data_list))]
-    subbasin_data_snow_col = [subbasin_data_list[i][7] for i in range(len(subbasin_data_list))]
-    subbasin_data_ET_col = [subbasin_data_list[i][8] for i in range(len(subbasin_data_list))]
+    allDamLocs = get_allDamLocs()
+    Dam_data_list = [allDamLocs[key] for key in allDamLocs]
+    Dam_data_list = sorted(Dam_data_list, key=lambda x: x[2])  # order list by number
+    Dam_lons = [Dam_data_list[i][0] for i in range(len(Dam_data_list))]
+    Dam_lats = [Dam_data_list[i][1] for i in range(len(Dam_data_list))]
     
-    c_Longs_model = [subbasin_data_list[i][0] for i in range(len(subbasin_data_list))]
-    c_Lats_model = [subbasin_data_list[i][1] for i in range(len(subbasin_data_list))]
     
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
@@ -1575,7 +1590,7 @@ for plot_num in plots_to_plot:
 ############  Correlations of discharge to SWE  ############    
     elif plot_num == 201:
         firstloop = True
-        for doyloop in range(161,162):
+        for doyloop in range(222,223):
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
@@ -1688,6 +1703,8 @@ for plot_num in plots_to_plot:
             cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
             cbar.set_label('fraction discharge increase with median DOY '+str(doyloop)+' SWE',size=10)
             cbar.ax.tick_params(labelsize=9) 
+            xD,yD=WBmap(Dam_lons, Dam_lats)
+            m2 = WBmap.scatter(xD,yD,marker='d', color='w', s=10.)
             
             file_graphics = 'Q_doy'+str(doyloop)+'_SWE_correlations '+mth_name+'.png'     
             plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
@@ -1799,7 +1816,9 @@ for plot_num in plots_to_plot:
             cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
             cbar.set_label('fraction discharge increase with median DOY '+str(doyloop)+' Precip',size=10)
             cbar.ax.tick_params(labelsize=9) 
-            
+            xD,yD=WBmap(Dam_lons, Dam_lats)
+            m2 = WBmap.scatter(xD,yD,marker='d', color='w', s=10.)
+           
             file_graphics = 'Q_doy'+str(doyloop)+'_Precip_correlations '+mth_name+'.png'     
             plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
                     verticalalignment='top')        
