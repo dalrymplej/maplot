@@ -63,4 +63,4 @@ seconds_in_day = 86400.
 days_in_15_yrs = 15*365
 days_in_30_yrs = 30*365
 days_in_60_yrs = 60*365
-m3s_to_cmy = seconds_in_yr/Willamette_Basin_area
+WBm3s_to_cmy = seconds_in_yr/Willamette_Basin_area
