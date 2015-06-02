@@ -617,11 +617,12 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend(['201b'])
+    plots_to_plot.extend(['201c'])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('cummulative_positive_wy_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
+    snt = imp.load_source('MaxSWE_wy_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     gg = imp.load_source('get_avg_discharge_by_moy','C:\\code\\usgs-gauges\\gageroutines.py')    
     gg = imp.load_source('get_avg_discharge_by_month','C:\\code\\usgs-gauges\\gageroutines.py')    
     gg = imp.load_source('get_gage_info','C:\\code\\usgs-gauges\\gageroutines.py')
@@ -1722,8 +1723,8 @@ for plot_num in plots_to_plot:
         for doyloop in range(155,305,7):
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
-                snow_df = snt.cummulative_positive_wy_snow_data(snow_df,periods=7) #FOR CUMMULATIVE SWE
-                snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=152)
+                snow_df = snt.cummulative_positive_wy_snow_data(snow_df,periods='W') #FOR CUMMULATIVE SWE
+                snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=152)  # doy 152 = Jun 1
     #s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
                 snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
                 gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
@@ -1843,6 +1844,134 @@ for plot_num in plots_to_plot:
             plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
             plt.close()       
         
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Correlations of discharge to MAX SWE  ############    
+    elif plot_num == '201c':
+        firstloop = True
+        for doyloop in range(155,305,7):
+            if firstloop:
+                snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+                snow_df = snt.MaxSWE_wy_snow_data(snow_df) #FOR MAX SWE
+                snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=270)  # doy 270 = end of Sep
+    #s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
+                snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+                gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+                firstloop = False
+            gage_num = []
+            c_Lats = []
+            c_Longs = []
+            Q_SWE0 = []
+            Delta_Q_SWE1 = []
+            Q_SWE1 = []
+            R2_SWE = []
+            p_value_SWE = []
+            SWE_frac = []
+            for gage in gage_list:
+                gage_num_tmp = gage[0]
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                         file_name = '', index_col = 2, 
+                         local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                gage_df = gg.reassign_by_yr(gage_df_doy)
+                snow_and_gage_df = pd.concat([snow_basin_index,gage_df],axis=1)
+                mth_name = 'DOY '+ str(doyloop)
+    #s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
+    #s_lp            moy = 8
+    #s_lp            if moy == 7:
+    #s_lp                mth_name = 'Jul'
+    #s_lp            elif moy == 8:
+    #s_lp                mth_name = 'Aug'
+    #s_lp            elif moy ==9:
+    #s_lp                mth_name = 'Sep'
+    #s_lp            elif moy ==10:
+    #s_lp                mth_name = 'Oct'
+    #s_lp            gage_mth_df = gg.get_avg_discharge_by_moy(gage_df,moy=moy)  
+    #s_lp            gage_mth_df = gg.reassign_by_yr(gage_mth_df)
+    #s_lp            snow_and_gage_df = pd.concat([snow_basin_index,gage_mth_df],axis=1)
+                snow_and_gage = np.array(snow_and_gage_df.dropna(axis=0, how='any'))
+                # slope, intercept, r_value, p_value, std_err
+                regression_stats_sg = stats.linregress(snow_and_gage[:,0],snow_and_gage[:,2]) 
+                slope = regression_stats_sg[0]
+                p_value = regression_stats_sg[3]
+                if p_value <= significance_cutoff: 
+                    gage_num.append(gage[0])
+                    c_Lats.append(gage[2])
+                    c_Longs.append(gage[3])
+                    Q_SWE0.append(regression_stats_sg[1])
+                    Delta_Q_SWE1.append(slope)
+                    Q_SWE1.append(slope + regression_stats_sg[1])
+                    R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
+                    p_value_SWE.append(regression_stats_sg[3])
+                    SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
+    
+            num_gauge = len(Q_SWE0)
+            c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
+            c_Longs_SWE = list(c_Longs)
+            gauge_info_csv = get_gauge_info()
+            num_gauge_csv = len(gauge_info_csv)
+            for i in range(num_gauge-1,-1,-1): # count back from end of list
+                for j in range(num_gauge_csv):
+                    if gauge_info_csv[j][1] == gage_num[i]:
+                        gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
+                        
+                if SWE_frac[i] < 0.: SWE_frac[i] = 0.
+                if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
+                    del(c_Lats_SWE[i])
+                    del(c_Longs_SWE[i])
+                    del(Q_SWE0[i])
+                    del(Delta_Q_SWE1[i])
+                    del(Q_SWE1[i])
+                    del(R2_SWE[i])
+                    del(p_value_SWE[i])
+                    del(SWE_frac[i])
+            num_gauge_SWE = len(Q_SWE0)
+            Q_SWE1_sig = list(Q_SWE1)
+            SWE_frac_sig = list(SWE_frac)
+            for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
+                if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
+                    SWE_frac_sig[i] = 0.
+    
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            num_gauge_sig = len(Q_SWE1_sig)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title(mth_name+" Discharge Day of Year & Max SWE")
+    #s_lp            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" SWE")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/3000.,10.,20000.)
+    #s_lp            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/1200.,10.,20000.)
+            
+            colord = np.array(SWE_frac_sig)
+            
+            x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
+            startcolor = 'blue'
+            midcolor1 = '#B24700'
+            midcolor2 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction of discharge correlated to med Max SWE',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            xD,yD=WBmap(Dam_lons, Dam_lats)
+            m2 = WBmap.scatter(xD,yD,marker='d', color='w', s=10.)
+            
+            file_graphics = 'Q_doy'+'_MaxSWE_correlations '+mth_name+'.png'     
+            plt.text(0., 0, get_metadata('Q-SWE-PRE.xlsx'), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()       
 ##############################################################################
 #  SNOW and PRECIP CORRELATIONS        
 ############  Correlations of discharge to PRECIP  ############    
