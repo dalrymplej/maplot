@@ -617,7 +617,7 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend(['201c'])
+    plots_to_plot.extend([202])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -1592,7 +1592,8 @@ for plot_num in plots_to_plot:
 ############  Correlations of discharge to SWE  ############    
     elif plot_num == 201:
         firstloop = True
-        for doyloop in range(155,305,7):
+        avg_range = 7
+        for doyloop in range(155,305,avg_range):
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=91)
@@ -1611,7 +1612,7 @@ for plot_num in plots_to_plot:
             SWE_frac = []
             for gage in gage_list:
                 gage_num_tmp = gage[0]
-                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
                          file_name = '', index_col = 2, 
                          local_path = 'C:\\code\\Willamette Basin gauge data\\')
                 gage_df = gg.reassign_by_yr(gage_df_doy)
@@ -1720,7 +1721,8 @@ for plot_num in plots_to_plot:
 ############  Correlations of discharge to CUMMULATIVE SWE  ############    
     elif plot_num == '201b':
         firstloop = True
-        for doyloop in range(155,305,7):
+        avg_range = 7
+        for doyloop in range(155,305,avg_range):
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_df = snt.cummulative_positive_wy_snow_data(snow_df,periods='W') #FOR CUMMULATIVE SWE
@@ -1740,7 +1742,7 @@ for plot_num in plots_to_plot:
             SWE_frac = []
             for gage in gage_list:
                 gage_num_tmp = gage[0]
-                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
                          file_name = '', index_col = 2, 
                          local_path = 'C:\\code\\Willamette Basin gauge data\\')
                 gage_df = gg.reassign_by_yr(gage_df_doy)
@@ -1849,7 +1851,8 @@ for plot_num in plots_to_plot:
 ############  Correlations of discharge to MAX SWE  ############    
     elif plot_num == '201c':
         firstloop = True
-        for doyloop in range(155,305,7):
+        avg_range = 7
+        for doyloop in range(155,305,7):   
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_df = snt.MaxSWE_wy_snow_data(snow_df) #FOR MAX SWE
@@ -1867,9 +1870,9 @@ for plot_num in plots_to_plot:
             R2_SWE = []
             p_value_SWE = []
             SWE_frac = []
-            for gage in gage_list:
-                gage_num_tmp = gage[0]
-                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+            for gage in gage_list:  
+                gage_num_tmp = gage[0]  
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
                          file_name = '', index_col = 2, 
                          local_path = 'C:\\code\\Willamette Basin gauge data\\')
                 gage_df = gg.reassign_by_yr(gage_df_doy)
@@ -1894,7 +1897,7 @@ for plot_num in plots_to_plot:
                 slope = regression_stats_sg[0]
                 p_value = regression_stats_sg[3]
                 if p_value <= significance_cutoff: 
-                    gage_num.append(gage[0])
+                    gage_num.append(gage[0])  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
                     c_Lats.append(gage[2])
                     c_Longs.append(gage[3])
                     Q_SWE0.append(regression_stats_sg[1])
@@ -1903,7 +1906,7 @@ for plot_num in plots_to_plot:
                     R2_SWE.append(regression_stats_sg[2]*regression_stats_sg[2])
                     p_value_SWE.append(regression_stats_sg[3])
                     SWE_frac.append(Delta_Q_SWE1[-1]/Q_SWE1[-1])
-    
+        
             num_gauge = len(Q_SWE0)
             c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
             c_Longs_SWE = list(c_Longs)
@@ -1942,7 +1945,7 @@ for plot_num in plots_to_plot:
             im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
             WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
             WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-            plt.title(mth_name+" Discharge Day of Year & Max SWE")
+            plt.title(mth_name+" Discharge & Max SWE")
     #s_lp            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" SWE")
             
             import heapq
@@ -1978,10 +1981,11 @@ for plot_num in plots_to_plot:
 
     elif plot_num == 202:
         firstloop = True
-        for doyloop in range(155,305,7):
+        avg_range = 7
+        for doyloop in range(155,305,avg_range):   
             if firstloop:
                 precip_df = pp.get_precip_data(local_path = 'C:\\code\\Willamette Basin precip data\\')
-                precip_by_moyrange = pp.get_value_by_moyrange(precip_df,2,5)
+                precip_by_moyrange = pp.get_value_by_moyrange(precip_df,2,6)  #2 = February, 6 = June.  Inclusive of first/last month.
                 precip_by_wy = pp.reassign_by_wyr(precip_by_moyrange)
                 precip_basin_index = pp.basin_index(precip_by_wy)
                 precip_basin_index = gg.reassign_by_yr(precip_basin_index) #place at end of year
@@ -1998,13 +2002,13 @@ for plot_num in plots_to_plot:
             p_value_PRE = []
             PRE_frac = []
             
-            for gage in gage_list:
-                gage_num_tmp = gage[0]
-                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+7, 
+            for gage in gage_list:  
+                gage_num_tmp = gage[0]  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
                          file_name = '', index_col = 2, 
                          local_path = 'C:\\code\\Willamette Basin gauge data\\')
                 gage_df = gg.reassign_by_yr(gage_df_doy)
-                precip_and_gage_df = pd.concat([precip_basin_index,gage_df],axis=1)['19690930':'20160101']  #cut out pre-dam history
+                precip_and_gage_df = pd.concat([precip_basin_index,gage_df],axis=1)['19000930':'20160101']  #cut out pre-dam history
                 mth_name = 'DOY '+ str(doyloop)
     #s_lp            gage_df = gg.get_avg_discharge_by_month(gage_num_tmp, local_path = 'C:\\code\\Willamette Basin gauge data\\')
     #s_lp            moy = 8
@@ -2025,7 +2029,7 @@ for plot_num in plots_to_plot:
                 slope = regression_stats_sg[0]
                 p_value = regression_stats_sg[3]
                 if p_value <= significance_cutoff: 
-                    gage_num.append(gage[0])
+                    gage_num.append(gage[0])  
                     c_Lats.append(gage[2])
                     c_Longs.append(gage[3])
                     Q_PRE0.append(regression_stats_sg[1])
@@ -2054,7 +2058,7 @@ for plot_num in plots_to_plot:
             im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
             WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
             WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
-            plt.title(mth_name+" Discharge & Day of Year Feb-May Precip")
+            plt.title(mth_name+" Discharge & Feb-Jun Precip")
     #s_lp            plt.title(mth_name+" Discharge & Day of Year "+str(doyloop)+" Precip")
             
             import heapq
