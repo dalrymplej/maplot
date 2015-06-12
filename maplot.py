@@ -23,6 +23,7 @@ import math
 from scipy import stats
 import pandas as pd
 import imp
+from statsmodels.formula.api import ols
 
 def get_EFdata():
     """ Returns tuple of data"""
@@ -617,7 +618,7 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend([202])
+    plots_to_plot.extend([211])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -642,7 +643,6 @@ if correlations_loop:
     
 print 'Plots to be plotted are:', '\t', plots_to_plot
 for plot_num in plots_to_plot:
-    
     
 ############  Specific Discharge ############    
     if plot_num == 0: 
@@ -1975,6 +1975,7 @@ for plot_num in plots_to_plot:
             #plt.show()
             plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
             plt.close()       
+
 ##############################################################################
 #  SNOW and PRECIP CORRELATIONS        
 ############  Correlations of discharge to PRECIP  ############    
@@ -2307,3 +2308,130 @@ for plot_num in plots_to_plot:
         #plt.show()
         plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
         plt.close()      
+
+##############################################################################
+#  SNOW and PRECIP CORRELATIONS        
+############  Multiple regression of discharge to MAX SWE & PRECIP   ############    
+    elif plot_num == 211:
+        firstloop = True
+        avg_range = 7
+        for doyloop in range(155,305,7):   
+            if firstloop:
+                snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
+                snow_df = snt.MaxSWE_wy_snow_data(snow_df) #FOR MAX SWE
+                snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=270)  # doy 270 = end of Sep
+    #s_lp        snow_basin_index_doy = snt.basin_index_doy(snow_df,doy=doyloop)
+                snow_basin_index = gg.reassign_by_yr(snow_basin_index_doy)
+                
+                precip_df = pp.get_precip_data(local_path = 'C:\\code\\Willamette Basin precip data\\')
+                precip_by_moyrange = pp.get_value_by_moyrange(precip_df,3,6)  #2 = February, 6 = June.  Inclusive of first/last month.
+                precip_by_wy = pp.reassign_by_wyr(precip_by_moyrange)
+                precip_basin_index = pp.basin_index(precip_by_wy)
+                precip_basin_index = gg.reassign_by_yr(precip_basin_index) #place at end of year
+                
+                gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3])
+                firstloop = False
+            gage_num = []
+            c_Lats = []
+            c_Longs = []
+            Q_SWE0 = []
+            Delta_Q_SWE1 = []
+            Q_SWE1 = []
+            R2_SWE = []
+            p_value_SWE = []
+            SWE_frac = []
+            for gage in gage_list:  
+                gage_num_tmp = gage[0]  
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
+                         file_name = '', index_col = 2, 
+                         local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                gage_df = gg.reassign_by_yr(gage_df_doy)
+                snow_precip_and_gage_df = pd.concat([snow_basin_index,precip_basin_index,gage_df],axis=1)
+                snow_precip_and_gage_df = snow_precip_and_gage_df.drop("Gage number",axis=1)
+                snow_precip_and_gage_df.columns = ["maxSWE","SprPrecip","gage"]
+                formula = 'gage ~ SprPrecip+maxSWE'
+                if len(snow_precip_and_gage_df.dropna(axis=0)) > 5:
+                    lm = ols(formula, snow_precip_and_gage_df).fit()
+                else:
+                    p_value = 1.
+                mth_name = 'DOY '+ str(doyloop)
+                intercept = lm.params[0]
+                slope = lm.params[2]
+                p_value = lm.pvalues[2]
+                if p_value <= significance_cutoff: 
+                    gage_num.append(gage[0])  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
+                    c_Lats.append(gage[2])
+                    c_Longs.append(gage[3])
+                    Q_SWE0.append(intercept)
+                    Delta_Q_SWE1.append(slope)
+                    Q_SWE1.append(np.array(gage_df_doy.mean())[1])
+                    R2_SWE.append(lm.rsquared)
+                    p_value_SWE.append(p_value)
+                    SWE_frac.append(slope/Q_SWE1[-1])
+        
+            num_gauge = len(Q_SWE0)
+            c_Lats_SWE = list(c_Lats)  # need to do it this way because of aliasing
+            c_Longs_SWE = list(c_Longs)
+            gauge_info_csv = get_gauge_info()
+            num_gauge_csv = len(gauge_info_csv)
+            for i in range(num_gauge-1,-1,-1): # count back from end of list
+                for j in range(num_gauge_csv):
+                    if gauge_info_csv[j][1] == gage_num[i]:
+                        gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
+                        
+                if SWE_frac[i] < 0.: SWE_frac[i] = 0.
+                if Q_SWE0[i] == '' or Delta_Q_SWE1[i] == '':   # delete parts of list that are empty
+                    del(c_Lats_SWE[i])
+                    del(c_Longs_SWE[i])
+                    del(Q_SWE0[i])
+                    del(Delta_Q_SWE1[i])
+                    del(Q_SWE1[i])
+                    del(R2_SWE[i])
+                    del(p_value_SWE[i])
+                    del(SWE_frac[i])
+            num_gauge_SWE = len(Q_SWE0)
+            Q_SWE1_sig = list(Q_SWE1)
+            SWE_frac_sig = list(SWE_frac)
+            for i in range(num_gauge_SWE-1,-1,-1): # count back from end of list
+                if p_value_SWE[i] > significance_cutoff:   # zero out parts of list that are not significant
+                    SWE_frac_sig[i] = 0.
+    
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            num_gauge_sig = len(Q_SWE1_sig)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title(mth_name+" Discharge & Max SWE")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_SWE1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_SWE1_sig)/3000.,10.,20000.)
+            
+            colord = np.array(SWE_frac_sig)
+            
+            x,y=WBmap(c_Longs_SWE,c_Lats_SWE)
+            startcolor = 'blue'
+            midcolor1 = '#B24700'
+            midcolor2 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction of discharge correlated to med Max SWE',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            xD,yD=WBmap(Dam_lons, Dam_lats)
+            m2 = WBmap.scatter(xD,yD,marker='d', color='w', s=10.)
+            
+            file_graphics = 'Q_doy'+'_MaxSWE_multivariable_regression '+mth_name+'.png'     
+            plt.text(0., 0, 'Roy Haggerty '+str(datetime.date.today()), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()       
