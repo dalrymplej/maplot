@@ -618,7 +618,7 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend([212])
+    plots_to_plot.extend([212,211])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -2316,6 +2316,7 @@ for plot_num in plots_to_plot:
         firstloop = True
         avg_range = 7
         for doyloop in range(155,305,7):   
+            mth_name = 'DOY '+ str(doyloop)
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_df = snt.MaxSWE_wy_snow_data(snow_df) #FOR MAX SWE
@@ -2352,12 +2353,11 @@ for plot_num in plots_to_plot:
                 formula = 'gage ~ SprPrecip+maxSWE'
                 if len(snow_precip_and_gage_df.dropna(axis=0)) > 5:
                     lm = ols(formula, snow_precip_and_gage_df).fit()
+                    intercept = lm.params[0]
+                    slope = lm.params[2]
+                    p_value = lm.pvalues[2]
                 else:
                     p_value = 1.
-                mth_name = 'DOY '+ str(doyloop)
-                intercept = lm.params[0]
-                slope = lm.params[2]
-                p_value = lm.pvalues[2]
                 if p_value <= significance_cutoff: 
                     gage_num.append(gage[0])  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
                     c_Lats.append(gage[2])
@@ -2444,6 +2444,7 @@ for plot_num in plots_to_plot:
         firstloop = True
         avg_range = 7
         for doyloop in range(155,305,7):   
+            mth_name = 'DOY '+ str(doyloop)
             if firstloop:
                 snow_df = snt.get_snow_data(local_path = 'C:\\code\\Willamette Basin snotel data\\')
                 snow_df = snt.MaxSWE_wy_snow_data(snow_df) #FOR MAX SWE
@@ -2480,12 +2481,11 @@ for plot_num in plots_to_plot:
                 formula = 'gage ~ SprPrecip+maxSWE'
                 if len(snow_precip_and_gage_df.dropna(axis=0)) > 5:
                     lm = ols(formula, snow_precip_and_gage_df).fit()
+                    intercept = lm.params[0]
+                    slope = lm.params[1]
+                    p_value = lm.pvalues[1]
                 else:
                     p_value = 1.
-                mth_name = 'DOY '+ str(doyloop)
-                intercept = lm.params[0]
-                slope = lm.params[1]
-                p_value = lm.pvalues[1]
                 if p_value <= significance_cutoff: 
                     gage_num.append(gage[0])  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
                     c_Lats.append(gage[2])
