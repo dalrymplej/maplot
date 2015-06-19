@@ -618,7 +618,7 @@ if reservoirs_loop:
     dam_data_lats = [dam_data_list[i][1] for i in range(len(dam_data_list))]
     
 if correlations_loop:
-    plots_to_plot.extend([212,211])
+    plots_to_plot.extend([220])
     significance_cutoff = 0.1
     snt = imp.load_source('get_snow_data','C:\\code\\usgs-gauges\\snowroutines.py')
     snt = imp.load_source('basin_index_doy','C:\\code\\usgs-gauges\\snowroutines.py')
@@ -2496,6 +2496,117 @@ for plot_num in plots_to_plot:
                     R2_Precip.append(lm.rsquared)
                     p_value_Precip.append(p_value)
                     Precip_frac.append(slope/Q_Precip1[-1])
+        
+            num_gauge = len(Q_Precip0)
+            c_Lats_Precip = list(c_Lats)  # need to do it this way because of aliasing
+            c_Longs_Precip = list(c_Longs)
+            gauge_info_csv = get_gauge_info()
+            num_gauge_csv = len(gauge_info_csv)
+            for i in range(num_gauge-1,-1,-1): # count back from end of list
+                for j in range(num_gauge_csv):
+                    if gauge_info_csv[j][1] == gage_num[i]:
+                        gauge_info_csv[j].extend([gage_num[i],c_Lats[i],c_Longs[i]])
+                        
+                if Precip_frac[i] < 0.: Precip_frac[i] = 0.
+                if Q_Precip0[i] == '' or Delta_Q_Precip1[i] == '':   # delete parts of list that are empty
+                    del(c_Lats_Precip[i])
+                    del(c_Longs_Precip[i])
+                    del(Q_Precip0[i])
+                    del(Delta_Q_Precip1[i])
+                    del(Q_Precip1[i])
+                    del(R2_Precip[i])
+                    del(p_value_Precip[i])
+                    del(Precip_frac[i])
+            num_gauge_Precip = len(Q_Precip0)
+            Q_Precip1_sig = list(Q_Precip1)
+            Precip_frac_sig = list(Precip_frac)
+            for i in range(num_gauge_Precip-1,-1,-1): # count back from end of list
+                if p_value_Precip[i] > significance_cutoff:   # zero out parts of list that are not significant
+                    Precip_frac_sig[i] = 0.
+    
+            fig = plt.figure(figsize=(6,8))
+            ax2 = fig.add_axes()
+            plt.axes(frameon=False)
+            
+            num_gauge_sig = len(Q_Precip1_sig)
+            
+            WBmap=basemap.Basemap(projection='tmerc', llcrnrlat=lat_bounds[0], llcrnrlon=long_bounds[1], 
+                        urcrnrlat=lat_bounds[1], urcrnrlon=long_bounds[0], ax=ax2, lon_0=-123., lat_0=(77.+34.4)/2.)
+            im = plt.imread('C:\\code\\maplot\\GeologicProvince_600dpi.png')
+            WBmap.imshow(im, origin='upper') #interpolation='lanczos', 
+            WBmap.readshapefile(shp, 'metadata', drawbounds=True,linewidth=0.25, color='k', )
+            plt.title(mth_name+" Discharge & Spring Precip")
+            
+            import heapq
+            data1_2nd_lgst = heapq.nlargest(2, Q_Precip1_sig)[1]  #find second-largest number
+            data1_size = np.clip(500.*np.array(Q_Precip1_sig)/3000.,10.,20000.)
+            
+            colord = np.array(Precip_frac_sig)
+            
+            x,y=WBmap(c_Longs_Precip,c_Lats_Precip)
+            startcolor = 'blue'
+            midcolor1 = '#B24700'
+            midcolor2 = 'red'
+            endcolor = 'black' #'#4C0000'
+            cmap1 = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',[startcolor,midcolor1,midcolor2,endcolor,endcolor],128)
+            m = WBmap.scatter(x, y, marker='o',  s=data1_size, lw=0,c=colord,cmap = cmap1,vmin=0,vmax=1)
+            # add colorbar.
+            cbar = WBmap.colorbar(m, location = 'bottom', pad='6%', size='3%')#,location='bottom',pad="5%",size='8')
+            cbar.set_label('fraction of discharge correlated to avg Spr Precip',size=10)
+            cbar.ax.tick_params(labelsize=9) 
+            xD,yD=WBmap(Dam_lons, Dam_lats)
+            m2 = WBmap.scatter(xD,yD,marker='d', color='w', s=10.)
+            
+            file_graphics = 'Q_doy'+'_SprPrecip_multivariable_regression '+mth_name+'.png'     
+            plt.text(0., 0, 'Roy Haggerty '+str(datetime.date.today()), fontsize=3,
+                    verticalalignment='top')        
+            #plt.show()
+            plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
+            plt.close()       
+
+
+##############################################################################
+#  Discharge       
+############  Discharge   ############    
+    elif plot_num == 220:
+        firstloop = True
+        avg_range = 7
+        for doyloop in range(1,370,7):   
+            mth_name = 'DOY '+ str(doyloop)
+            if firstloop:
+                assert False
+                for gage in gage_list:  
+                    gage_num_tmp = gage[0]  
+                    gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+364, 
+                             file_name = '', index_col = 2, 
+                             local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                    gage_df_avg = gg.reassign_by_yr(gage_df_doy)
+                firstloop = False
+            gage_num = []
+            c_Lats = []
+            c_Longs = []
+            Q_Precip0 = []
+            Delta_Q_Precip1 = []
+            Q_Precip1 = []
+            R2_Precip = []
+            p_value_Precip = []
+            Precip_frac = []
+            for gage in gage_list:  
+                gage_num_tmp = gage[0]  
+                gage_df_doy = gg.get_discharge_by_doyrange(gage_num_tmp, doyloop,doyloop+avg_range, 
+                         file_name = '', index_col = 2, 
+                         local_path = 'C:\\code\\Willamette Basin gauge data\\')
+                gage_df = gg.reassign_by_yr(gage_df_doy)
+                formula = 'gage ~ SprPrecip+maxSWE'
+                gage_num.append(gage[0])  #for gage in gage_list:  COMMENTED OUT FOR DEBUGGING/CHECKING CODE
+                c_Lats.append(gage[2])
+                c_Longs.append(gage[3])
+                Q_Precip0.append(intercept)
+                Delta_Q_Precip1.append(slope)
+                Q_Precip1.append(np.array(gage_df_doy.mean())[1])
+                R2_Precip.append(lm.rsquared)
+                p_value_Precip.append(p_value)
+                Precip_frac.append(slope/Q_Precip1[-1])
         
             num_gauge = len(Q_Precip0)
             c_Lats_Precip = list(c_Lats)  # need to do it this way because of aliasing
