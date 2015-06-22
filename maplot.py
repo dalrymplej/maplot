@@ -85,7 +85,86 @@ def get_gauge_info():
     ["Mckenzie_Clear_Lake_(m3_s)",14158500]
     ]
     return gauge_info
+
+def get_recreational_reservoirs():
+    # Cameron Barrie, June 2015
+    """ Returns tuple of data for recreational reservoir locations"""
+# Lat/long of 11 locations:
+    reservoirs= {
+            'Detroit':                  (-122.250739, 44.721682, 1, 'Detroit'),
+            'Fern Ridge':               (-123.301178, 44.120915, 2, 'Fern_Ridge'),
+            'Foster':                   (-122.641251, 44.414983, 3, 'Foster'),
+            'Green Peter':              (-122.548650, 44.449654, 4, 'Green_Peter'),
+            'Dorena':                   (-122.955039, 43.786775, 5, 'Dorena'),
+            'Fall Creek':               (-122.739280, 43.951271, 6, 'Fall_Creek'),
+            'Cottage_Grove':            (-123.052858, 43.716259, 7, 'Cottage_Grove'),
+            'Blue River':               (-122.279801, 44.182290, 8, 'Blue_River'),
+            'Hills Creek':              (-122.423156, 43.676881, 9, 'Hills_Creek'),
+            'Lookout Point':            (-122.752465, 43.914625, 10, 'Lookout_Point'),
+            'Cougar':                   (-122.231298, 44.107187, 11, 'Cougar')
+            }
+    return reservoirs
     
+def get_scenarios():     
+    # Cameron Barrie, June 2015
+    scenarios = {
+            'Reference':                '_Ref_',
+            'HighClim':                 '_HighClim_',
+            'LowClim':                  '_LowClim_',
+            'HighPop':                  '_HighPop_',
+            'UrbExpand':                '_UrbExpand_',
+            'FireSuppress':             '_FireSuppress_',
+            'FullCostUrb':              '_FullCostUrb_',
+            'Managed':                  '_Managed_',
+            'NoResorvoirs':             '_NoReservoirs_',
+            'NoGrow':                   '_NoGrow_',
+            'LateRefill':               '_LateRefill_',
+            'AllFallow':                '_AllFallow_'
+            }
+    return scenarios
+
+def get_visits():
+    # Cameron Barrie, June 2015
+    """Returns reservoir visits on day of year
+    """
+    # list of 2-D arrays cantaining 2010 base visits during June, July, and August of 2010
+    base_visits = [[2246,3048,2727],[1390,1886,1688],[891,1210,1082],[442,600,537],[275,373,333],
+                   [145,197,176],[175,237,212],[165,224,200],[87,118,105],[39,54,48],[5,6,6]]
+    visits_array_list = []
+    visits_array = [[0 for j in range(365)] for i in range(89)]
+    for r in range (len(base_visits)):
+        for y in range(89):
+            for d in range(365):
+                if d in range(244,274):
+                    visits_array[y][d] = base_visits[r][0]
+                elif d in range(274,305):
+                    visits_array[y][d] = base_visits[r][1]
+                elif d in range(305,336):
+                    visits_array[y][d] = base_visits[r][2]
+        visits_array_list.append(np.array(visits_array))
+    return visits_array_list
+
+def get_pop_index(data):
+    # Cameron Barrie, June 2015
+    year_index = []
+    year_index =[data[i+2,3]/data[2,3] for i in range(len(data[2:,3]))]
+    return year_index
+    
+# used for determining the scenario of the population index
+# based on the original scenario
+    
+def get_pop_scenario(scenario):
+    # Cameron Barrie, June 2015
+    """Returns population scenario needed for scenario
+    """
+    if scenario == '_HighPop_':
+        return '_HighPop_'
+    elif scenario == '_NoGrow_':
+        return '_NoGrow_'
+    else:
+        return '_Ref_'
+
+
 def get_EFrules():
     """ Write rules for each location
     For each location, provide rules.
@@ -559,7 +638,8 @@ figsize_leg = (0.8,0.6)
 
 subbasins_loop = False 
 reservoirs_loop = False
-correlations_loop = True
+correlations_loop = False
+recreational_reservoirs_loop = True  #edit here
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 file_baseline = '_Ref_'
@@ -639,6 +719,18 @@ if correlations_loop:
     Dam_data_list = sorted(Dam_data_list, key=lambda x: x[2])  # order list by number
     Dam_lons = [Dam_data_list[i][0] for i in range(len(Dam_data_list))]
     Dam_lats = [Dam_data_list[i][1] for i in range(len(Dam_data_list))]
+
+if recreational_reservoirs_loop:# reservoir and scenario information/data
+    plots_to_plot.extend([301])
+
+    reservoirs = get_recreational_reservoirs()
+    Dam_data_list = [reservoirs[key] for key in reservoirs]
+    Dam_data_list = sorted(Dam_data_list, key=lambda x: x[2])  # order list by number
+    Dam_lons = [Dam_data_list[i][0] for i in range(len(Dam_data_list))]
+    Dam_lats = [Dam_data_list[i][1] for i in range(len(Dam_data_list))]
+    
+    scenarios = get_scenarios()
+    scenarios_list = [scenarios[key] for key in scenarios]
     
     
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -2678,3 +2770,92 @@ for plot_num in plots_to_plot:
             #plt.show()
             plt.savefig(png_path+file_graphics, format="png", dpi=400, bbox_inches='tight')
             plt.close()       
+
+##############################################################################
+#  Reservoir visit plots       
+############  Summer reservoir welfare losses w mini figs/LINES & SHADING ############    
+# Camerson Barrie Jun 2015
+    if plot_num == 301:
+        plt.close()
+        ########## Test code
+        print "Test"
+        visits_data = get_visits()
+        
+        for r in range(len(Dam_data_list)):
+            sum_s = [0 for s in range(len(scenarios_list))]         
+            
+            for s in range(len(scenarios_list)):# do for each scenario
+                sum_s[s]
+                pop_file = data_path + 'WB_Population' + get_pop_scenario(scenarios_list[s]) + 'Run0.csv'
+                pop_data = get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1)))
+                ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
+                ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
+                ele_full = np.amax(ele_data,axis=1)
+                sum_y = [0 for yr in range(89)]# sum for the year
+                for yr in range(89):
+                    full_less_current = (ele_full[yr]*np.ones_like(ele_data[yr])) - ele_data[yr]
+                    for d in range(365):
+                        an = (-0.165)*visits_data[0][yr][d]*pop_data[yr]*full_less_current[d]
+                        sum_y[yr] = sum_y[yr] + an
+                    sum_s[s] = sum_s[s] + sum_y[yr]
+            print "\n" + Dam_data_list[r][3]
+            print sum_s
+
+        ####################
+        """
+        window = binomial_window(15)
+        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
+        # Calculate Baselines
+        baseline = {}
+        Q10 = {}
+        for key in SimulatedHistoric:
+            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+            Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
+            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})  
+        
+        data_to_stack = []
+        for key in scenarios:
+            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
+                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
+            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
+            data_hd_binary = [compare_rows(data_hd1[i],Q10[scenarios_own[key]][i]) for i in range(12)]  #1's are drought
+            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
+            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
+            # Calculate baseline-subtracted value
+            if key == baseline_case:
+                summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
+        
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i],1) for i in range(12)]
+        lower = [np.min(data_stacked[i],1) for i in range(12)]
+        
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
+        xctr = 0.5
+        yctr = 0.5
+        
+        redblue = ['red','blue']
+        num_yrs = len(summer_dr_d_smthd[0])
+        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
+                        mind,maxd,redblue, num_yrs, facecolor = '0.6',
+                        linewidth = 1.5)
+        
+        ylabel = r'$\Delta \, Drought\,$ [days]'
+        xlabel = 'Red = Drier'
+        write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
+                      mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
+                      linewidth=1.5)
+               
+        title = "Change in Summer Hydrologic Drought"
+        file_graphics = 'change_in_drought_days_wGrphs.png'
+        
+        graphs = range(13); graphs.remove(11)
+
+        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+"""
