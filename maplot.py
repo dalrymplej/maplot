@@ -557,9 +557,9 @@ figsize=[(0.8,0.6) for i in range(11)]
 figsize.append((0.8,0.6))
 figsize_leg = (0.8,0.6)
 
-subbasins_loop = False
+subbasins_loop = False 
 reservoirs_loop = False
-correlations_loop = False
+correlations_loop = True
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 file_baseline = '_Ref_'
@@ -592,7 +592,7 @@ if subbasins_loop:
 #    plots_to_plot = range(4)
 #    plots_to_plot.extend([9])
 #    plots_to_plot.extend([4,45,5,8,9])
-    plots_to_plot.extend([4])
+    plots_to_plot.extend([0])
     
 if reservoirs_loop:
 #    plots_to_plot.extend([101,102,103])
