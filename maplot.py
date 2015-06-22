@@ -2574,6 +2574,10 @@ for plot_num in plots_to_plot:
         for doyloop in range(1,370,7):   
             mth_name = 'DOY '+ str(doyloop)
             if firstloop:
+                gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3,4])
+                print gage_list[0]
+                # WORK HERE
+                # print gage_list[:,3]
                 assert False
                 for gage in gage_list:  
                     gage_num_tmp = gage[0]  
