@@ -127,7 +127,7 @@ def get_visits():
     # Cameron Barrie, June 2015
     """Returns reservoir visits on day of year
     """
-    # list of 2-D arrays cantaining 2010 base visits during June, July, and August of 2010
+    # list of 2-D arrays containing 2010 base visits during June, July, and August of 2010
     base_visits = [[2246,3048,2727],[1390,1886,1688],[891,1210,1082],[442,600,537],[275,373,333],
                    [145,197,176],[175,237,212],[165,224,200],[87,118,105],[39,54,48],[5,6,6]]
     visits_array_list = []
@@ -147,7 +147,8 @@ def get_visits():
 def get_pop_index(data):
     # Cameron Barrie, June 2015
     year_index = []
-    year_index =[data[i+2,3]/data[2,3] for i in range(len(data[2:,3]))]
+    num_yrs = np.shape(data)[0]
+    year_index =[data[i,1]/data[0,1] for i in range(num_yrs)]
     return year_index
     
 # used for determining the scenario of the population index
@@ -2777,54 +2778,50 @@ for plot_num in plots_to_plot:
 # Camerson Barrie Jun 2015
     if plot_num == 301:
         plt.close()
-        ########## Test code
-        print "Test"
+
+        num_yrs = 89
+        num_scenarios = len(scenarios_list)
         visits_data = get_visits()
-        
-        for r in range(len(Dam_data_list)):
-            sum_s = [0 for s in range(len(scenarios_list))]         
+        num_reservoirs = len(visits_data)
+        pop_data = []
+        scaled_visits_data = []
+        Wt_total = []
+        Wrt = []
+        sum_s = [np.zeros_like(range(num_yrs)) for s in range(num_scenarios)]
+        ele_full=[]
+        Wrt_and_Wt_total = []
+        window = binomial_window(5)               
+        for r in range(num_reservoirs):
+            ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir_Ref_Run0.csv'
+            ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
+            ele_full.append(np.amax(ele_data))
             
-            for s in range(len(scenarios_list)):# do for each scenario
-                sum_s[s]
-                pop_file = data_path + 'WB_Population' + get_pop_scenario(scenarios_list[s]) + 'Run0.csv'
-                pop_data = get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1)))
+        for s in range(len(scenarios_list)):# do for each scenario
+            pop_file = data_path + 'WB_Population' + get_pop_scenario(scenarios_list[s]) + 'Run0.csv'
+            pop_data.append(np.array(get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1))[1:,:])))  #skip first year of data (2010)
+            full_less_current = []
+            Wt = []
+            for r in range(num_reservoirs):
+                scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]
+            
                 ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
                 ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
-                ele_full = np.amax(ele_data,axis=1)
-                sum_y = [0 for yr in range(89)]# sum for the year
-                for yr in range(89):
-                    full_less_current = (ele_full[yr]*np.ones_like(ele_data[yr])) - ele_data[yr]
-                    for d in range(365):
-                        an = (-0.165)*visits_data[0][yr][d]*pop_data[yr]*full_less_current[d]
-                        sum_y[yr] = sum_y[yr] + an
-                    sum_s[s] = sum_s[s] + sum_y[yr]
-            print "\n" + Dam_data_list[r][3]
-            print sum_s
-
-        ####################
-        """
-        window = binomial_window(15)
-        file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
-        # Calculate Baselines
-        baseline = {}
-        Q10 = {}
-        for key in SimulatedHistoric:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',SimulatedHistoric[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
-            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            Q10.update({key:[np.percentile(data_hd1[i][0:59,:], 10.,axis=0) for i in range(12)]})
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[key][i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            baseline.update({key:[np.mean(summer_dr_d[i]) for i in range(12)]})  
-        
+                full_less_current= ele_full[r]*np.ones_like(ele_data) - ele_data
+                Wt.append(np.sum((-0.165)*scaled_visits_data*full_less_current,1))  # sum welfare loss for each year and append it to Wt
+                sum_s[s] += np.sum((-0.165)*scaled_visits_data*full_less_current,1)  # sum over all reservoirs
+            
+            Wrt.append(Wt)
+            Wt_total.append(sum_s)
+#            Wrt_and_Wt_total.append(movingaverage(Wt+sum_s, window))
+        assert False
         data_to_stack = []
-        for key in scenarios:
-            data_hd1=[mfx(file_nm.replace(file_baseline+'Run0',scenarios[key]), column=subbasin_data_order[i], skip=cst.day_of_year_oct1,
-                       movingaveragevec=np.ones(30)/30.) for i in range(12)]
-            data_hd1[7] = data_hd1[7] - data_hd1[8]  # correct N Santiam for S Santiam contribution
-            data_hd_binary = [compare_rows(data_hd1[i],Q10[scenarios_own[key]][i]) for i in range(12)]  #1's are drought
-            summer_dr_d = [np.sum(data_hd_binary[i][:,260:365],1) for i in range(12)]
-            data_to_stack.append([np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)])  
+        for r in s in range(len(scenarios_list)):
+            data_to_stack.append(movingaverage(Wrt_and_Wt_total[s], window))  
+        
+        ####################
+
+        for key in ['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
+            data_to_stack.append([movingaverage(Wrt_and_Wt_total[i], window) for i in range(12)])  
             # Calculate baseline-subtracted value
             if key == baseline_case:
                 summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
@@ -2858,4 +2855,3 @@ for plot_num in plots_to_plot:
         graphs = range(13); graphs.remove(11)
 
         write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
-"""
