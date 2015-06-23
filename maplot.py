@@ -52,7 +52,7 @@ def get_EFdata():
     return EFdata, DamLocs
     
 def get_allDamLocs():
-    """ Returns tuple of data for all dam locations"""
+    """ Returns dictrionary of data for all dam locations"""
 # Lat/long of 8 locations:
     allDamLocs= {
             'Hills Creek':              (-122.423156, 43.676881, 1),
@@ -88,7 +88,7 @@ def get_gauge_info():
 
 def get_recreational_reservoirs():
     # Cameron Barrie, June 2015
-    """ Returns tuple of data for recreational reservoir locations"""
+    """ Returns dictrionary of data for recreational reservoir locations"""
 # Lat/long of 11 locations:
     reservoirs= {
             'Detroit':                  (-122.250739, 44.721682, 1, 'Detroit'),
@@ -2780,6 +2780,7 @@ for plot_num in plots_to_plot:
         plt.close()
 
         num_yrs = 89
+        scale_factor = 1.e6
         num_scenarios = len(scenarios_list)
         visits_data = get_visits()
         num_reservoirs = len(visits_data)
@@ -2787,7 +2788,7 @@ for plot_num in plots_to_plot:
         scaled_visits_data = []
         Wt_total = []
         Wrt = []
-        sum_s = [np.zeros_like(range(num_yrs)) for s in range(num_scenarios)]
+        sum_s = [np.zeros_like(range(num_yrs)) for r in range(num_scenarios)]
         ele_full=[]
         Wrt_and_Wt_total = []
         window = binomial_window(5)               
@@ -2796,62 +2797,59 @@ for plot_num in plots_to_plot:
             ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
             ele_full.append(np.amax(ele_data))
             
-        for s in range(len(scenarios_list)):# do for each scenario
+        for s in range(num_scenarios):# do for each scenario
             pop_file = data_path + 'WB_Population' + get_pop_scenario(scenarios_list[s]) + 'Run0.csv'
             pop_data.append(np.array(get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1))[1:,:])))  #skip first year of data (2010)
             full_less_current = []
             Wt = []
             for r in range(num_reservoirs):
-                scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]
-            
+                if r != 0:                
+                    scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]*10.
+                else:
+                    scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]
                 ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
                 ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
                 full_less_current= ele_full[r]*np.ones_like(ele_data) - ele_data
                 Wt.append(np.sum((-0.165)*scaled_visits_data*full_less_current,1))  # sum welfare loss for each year and append it to Wt
                 sum_s[s] += np.sum((-0.165)*scaled_visits_data*full_less_current,1)  # sum over all reservoirs
-            
             Wrt.append(Wt)
-            Wt_total.append(sum_s)
-#            Wrt_and_Wt_total.append(movingaverage(Wt+sum_s, window))
-        assert False
+        Wrt_and_Wt_total = Wrt
+        print np.shape(Wrt_and_Wt_total)
+        
         data_to_stack = []
-        for r in s in range(len(scenarios_list)):
-            data_to_stack.append(movingaverage(Wrt_and_Wt_total[s], window))  
-        
-        ####################
-
-        for key in ['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
-            data_to_stack.append([movingaverage(Wrt_and_Wt_total[i], window) for i in range(12)])  
+         
+        for key in [2,3,4,9,6,8,10,11]: #['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
+            data_to_stack.append([movingaverage(Wrt_and_Wt_total[key][i], window) for i in range(11)])  
             # Calculate baseline-subtracted value
-            if key == baseline_case:
-                summer_dr_d_smthd = [np.subtract(movingaverage(summer_dr_d[i],window), baseline[scenarios_own[key]][i]) for i in range(12)]
+            if key == 9:
+                Wrt_smthd = [movingaverage(Wrt_and_Wt_total[key][i],window) for i in range(11)]
         
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
         
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
-        upper = [np.max(data_stacked[i],1) for i in range(12)]
-        lower = [np.min(data_stacked[i],1) for i in range(12)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
+        upper = [np.max(data_stacked[i],1) for i in range(11)]
+        lower = [np.min(data_stacked[i],1) for i in range(11)]
         
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
-        xctr = 0.5
-        yctr = 0.5
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+        xctr = 0.7
+        yctr = 0.7
         
         redblue = ['red','blue']
-        num_yrs = len(summer_dr_d_smthd[0])
-        write_tinyfigs2(summer_dr_d_smthd,upper, lower, figsize,
+        num_yrs = len(Wrt_smthd[0])
+        write_tinyfigs2(Wrt_smthd,upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
                         linewidth = 1.5)
         
-        ylabel = r'$\Delta \, Drought\,$ [days]'
+        ylabel = r'Welfare Loss [$M]'
         xlabel = 'Red = Drier'
-        write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
+        write_legend2(Wrt_smthd[0], upper[0], lower[0],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5)
+                      linewidth=1.5,which_legend = 'subbasins')
                
-        title = "Change in Summer Hydrologic Drought"
-        file_graphics = 'change_in_drought_days_wGrphs.png'
+        title = "Change in Welfare Loss for Recreation at Reservoirs"
+        file_graphics = 'change_in_welfare_loss_reservoir_rec.png'
         
-        graphs = range(13); graphs.remove(11)
+        graphs_list = range(11)
 
-        write_map(title, lons, lats, file_graphics, get_metadata(file_nm), shp, graphs=graphs)
+        write_map(title, Dam_lons, Dam_lats, file_graphics, get_metadata(ele_file), shp, graphs=graphs_list)
