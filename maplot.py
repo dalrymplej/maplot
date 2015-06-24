@@ -141,7 +141,7 @@ def get_visits():
                     visits_array[y][d] = base_visits[r][1]
                 elif d in range(305,336):
                     visits_array[y][d] = base_visits[r][2]
-        visits_array_list.append(np.array(visits_array))
+        visits_array_list.append(np.array(visits_array).astype(float))
     return visits_array_list
 
 def get_pop_index(data):
@@ -436,15 +436,22 @@ def ct(water_yr_array):
     CT = np.divide(m1,m0) + cst.day_of_year_oct1
     return CT
 
-def get_metadata(file_nm):
+def get_metadata(file_nm, which_md=None):
     """Add metadata to plot
     """
     import time as timetool, os.path
-    textstr = ('Willamette Water 2100' + 
-              '\n' + '  Graph generated on ' + str(datetime.date.today()) +
-              '\n' + '  File: ' + file_nm +\
-              '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))
-              )
+    if which_md==None:
+        textstr = ('Willamette Water 2100' + 
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) +
+                  '\n' + '  File: ' + file_nm +\
+                  '\n' + '  Data generated on ' + timetool.ctime(os.path.getctime(file_nm))
+                  )
+    elif which_md=='RRs':
+        textstr = ('Willamette Water 2100' + 
+                  '\n' + '  Graph generated on ' + str(datetime.date.today()) + 
+                  '\n' + '  Graphs shown at approximate locations of reservoirs'+
+                  '\n' + '  All graphs vertically exaggerated by 10x except Detroit and Total Basin'
+                  )
     return textstr
     
 def write_tinyfigs(datalist,figsize,mind,maxd,redblue, num_yrs,
@@ -490,7 +497,7 @@ def colorline(x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0,
      
         
 def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,
-                facecolor='0.8',linewidth = 1.):
+                facecolor='0.8',linewidth = 1.,bigplots=False,xlabel=None,ylabel=None):
     """Write tiny figs to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -513,6 +520,9 @@ def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,
         plt.xlim(0,num_yrs)
         plt.savefig('tinyfig'+str(i)+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
         plt.close()
+    
+    if bigplots:
+        pass
 
     return
 
@@ -546,7 +556,7 @@ def write_legend(data,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
     return
     
 def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xlabel,
-                facecolor='0.8',linewidth = 1.,which_legend='subbasins'):
+                facecolor='0.8',linewidth = 1.,which_legend='subbasins',bigplots=False):
     """Write tiny legend to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -580,8 +590,13 @@ def write_legend2(data,upper,lower,figsize,mind,maxd,redblue, num_yrs,ylabel,xla
         plt.savefig('tinyfig'+'12'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
     elif which_legend == 'EFs':
         plt.savefig('tinyfig'+'8'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
+    elif which_legend == 'RRs':
+        plt.savefig('tinyfig'+'11'+'.png', format="png", dpi=300, bbox_inches='tight',transparent=True)
     plt.close()
     mpl.rcdefaults()
+    
+    if bigplots:
+        pass
 
     return
     
@@ -605,6 +620,7 @@ def write_map(title, lons, lats, file_graphics, textstr, shp, graphs=range(13), 
     plt.title(title)
     
     x,y=WBmap(lons,lats)
+    print 'xctr, yctr = ', xctr, yctr
     
     plt.text(0., 0., textstr, fontsize=3,verticalalignment='top')        
     for i in graphs:
@@ -691,7 +707,6 @@ if reservoirs_loop:
     EFlons = res_data_lons
     EFlats = res_data_lats
     EFlons.append(-123.7)
-#1    EFlats.append(43.9)
     EFlats.append(45.55)
     
     dam_data_list = [DamLocs[key] for key in DamLocs]
@@ -729,6 +744,8 @@ if recreational_reservoirs_loop:# reservoir and scenario information/data
     Dam_data_list = sorted(Dam_data_list, key=lambda x: x[2])  # order list by number
     Dam_lons = [Dam_data_list[i][0] for i in range(len(Dam_data_list))]
     Dam_lats = [Dam_data_list[i][1] for i in range(len(Dam_data_list))]
+    Dam_lons.append(-123.6)
+    Dam_lats.append(45.58)
     
     scenarios = get_scenarios()
     scenarios_list = [scenarios[key] for key in scenarios]
@@ -2780,6 +2797,7 @@ for plot_num in plots_to_plot:
         plt.close()
 
         num_yrs = 89
+        vertical_exag = 10.
         scale_factor = 1.e6
         num_scenarios = len(scenarios_list)
         visits_data = get_visits()
@@ -2788,10 +2806,11 @@ for plot_num in plots_to_plot:
         scaled_visits_data = []
         Wt_total = []
         Wrt = []
-        sum_s = [np.zeros_like(range(num_yrs)) for r in range(num_scenarios)]
+        sum_s = [np.zeros_like(range(num_yrs)).astype(float) for r in range(num_scenarios)]
         ele_full=[]
         Wrt_and_Wt_total = []
-        window = binomial_window(5)               
+        Levels_all = []
+        window = binomial_window(15)               
         for r in range(num_reservoirs):
             ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir_Ref_Run0.csv'
             ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
@@ -2802,54 +2821,61 @@ for plot_num in plots_to_plot:
             pop_data.append(np.array(get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1))[1:,:])))  #skip first year of data (2010)
             full_less_current = []
             Wt = []
-            for r in range(num_reservoirs):
-                if r != 0:                
-                    scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]*10.
+            levels = []
+            for r in range(num_reservoirs+1):
+                if r < num_reservoirs:
+                    scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]/scale_factor
+                    ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
+                    ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
+                    full_less_current= (ele_full[r]*np.ones_like(ele_data) - ele_data)/cst.ft_to_m
+                    levels.append(nrc(full_less_current,[1,273],[88,335]))
+                    if r != 0 and r < num_reservoirs:     # Detroit's values are much larger, so scale the others up by a factor of vertical_exag     
+                        Wt.append(np.sum((-0.165)*scaled_visits_data*10.*full_less_current,1))  #not Detroit  # sum welfare loss for each year and append it to Wt
+                    elif r == 0:    # Detroit
+                        Wt.append(np.sum((-0.165)*scaled_visits_data*full_less_current,1))  # sum welfare loss for each year and append it to Wt
+                    sum_s[s] += np.sum((-0.165)*scaled_visits_data*full_less_current,1)  # sum over all reservoirs
                 else:
-                    scaled_visits_data = visits_data[r]*pop_data[s][:,np.newaxis]
-                ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
-                ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
-                full_less_current= ele_full[r]*np.ones_like(ele_data) - ele_data
-                Wt.append(np.sum((-0.165)*scaled_visits_data*full_less_current,1))  # sum welfare loss for each year and append it to Wt
-                sum_s[s] += np.sum((-0.165)*scaled_visits_data*full_less_current,1)  # sum over all reservoirs
+                    Wt.append(sum_s[s])
             Wrt.append(Wt)
+            Levels_all.append(levels)
         Wrt_and_Wt_total = Wrt
         print np.shape(Wrt_and_Wt_total)
+        print np.shape(sum_s)
         
         data_to_stack = []
-         
-        for key in [2,3,4,9,6,8,10,11]: #['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
-            data_to_stack.append([movingaverage(Wrt_and_Wt_total[key][i], window) for i in range(11)])  
+        #['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
+        for key in [2,3,4,9,6,8,10,11]: 
+            data_to_stack.append([movingaverage(Wrt_and_Wt_total[key][i], window) for i in range(12)])  
             # Calculate baseline-subtracted value
-            if key == 9:
-                Wrt_smthd = [movingaverage(Wrt_and_Wt_total[key][i],window) for i in range(11)]
+            if key == 9:   # Ref case
+                Wrt_smthd = [movingaverage(Wrt_and_Wt_total[key][i],window) for i in range(12)]
         
-        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(11)]
+        data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
         
-        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(11)] 
-        upper = [np.max(data_stacked[i],1) for i in range(11)]
-        lower = [np.min(data_stacked[i],1) for i in range(11)]
+        data_stacked = [np.column_stack(data_to_stack[i]) for i in range(12)] 
+        upper = [np.max(data_stacked[i],1) for i in range(12)]
+        lower = [np.min(data_stacked[i],1) for i in range(12)]
         
-        maxd = np.max(np.array([np.max(upper[i]) for i in range(11)]))
-        mind = np.min(np.array([np.min(lower[i]) for i in range(11)]))
+        maxd = np.max(np.array([np.max(upper[i]) for i in range(12)]))
+        mind = np.min(np.array([np.min(lower[i]) for i in range(12)]))
         xctr = 0.7
         yctr = 0.7
         
-        redblue = ['red','blue']
+        redblue = ['blue','red']
         num_yrs = len(Wrt_smthd[0])
+        ylabel = r'Welfare Loss [$M]'
+        xlabel = 'Annual from 2010 to 2100'
         write_tinyfigs2(Wrt_smthd,upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5)
+                        linewidth = 1.5,bigplots=True,xlabel=xlabel,ylabel=ylabel)
         
-        ylabel = r'Welfare Loss [$M]'
-        xlabel = 'Red = Drier'
-        write_legend2(Wrt_smthd[0], upper[0], lower[0],figsize_leg,
+        write_legend2(Wrt_smthd[11], upper[11], lower[11],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
-                      linewidth=1.5,which_legend = 'subbasins')
+                      linewidth=1.5,which_legend = 'RRs',bigplots=True)
                
-        title = "Change in Welfare Loss for Recreation at Reservoirs"
+        title = "Welfare Loss for Recreation at Reservoirs"
         file_graphics = 'change_in_welfare_loss_reservoir_rec.png'
         
-        graphs_list = range(11)
+        graphs_list = range(12)
 
-        write_map(title, Dam_lons, Dam_lats, file_graphics, get_metadata(ele_file), shp, graphs=graphs_list)
+        write_map(title, Dam_lons, Dam_lats, file_graphics, get_metadata(ele_file,which_md='RRs'), shp, graphs=graphs_list)
