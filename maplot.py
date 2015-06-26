@@ -497,7 +497,7 @@ def colorline(x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0,
      
         
 def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,
-                facecolor='0.8',linewidth = 1.,bigplots=False,xlabel=None,ylabel=None):
+                facecolor='0.8',linewidth = 1.,bigplots=False,xlabel=None,ylabel=None,xaxis=False):
     """Write tiny figs to be plotted on map
     """
     from matplotlib import pyplot as plt
@@ -511,6 +511,9 @@ def write_tinyfigs2(datalist,upper, lower,figsize,mind,maxd,redblue, num_yrs,
     
     for i in range(len(datalist)):
         plt.figure(figsize = figsize[i])
+#        if xaxis:
+#            plt.axes.get_yaxis().set_visible(False)
+#        else:
         plt.axis('off')
         plt.ylim( (mind,maxd) )
         x,y = interp(range(num_yrs), datalist[i], 0.,float(num_yrs-1),3*num_yrs)
@@ -2810,12 +2813,26 @@ for plot_num in plots_to_plot:
         ele_full=[]
         Wrt_and_Wt_total = []
         Levels_all = []
-        window = binomial_window(15)               
+        window = binomial_window(3)               
         for r in range(num_reservoirs):
             ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir_Ref_Run0.csv'
             ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
-            ele_full.append(np.amax(ele_data))
-            
+            if  'Lookout_Point'  in ele_file: max_cons_pool_SOP = 926.  *cst.ft_to_m
+            elif 'Detroit'       in ele_file: max_cons_pool_SOP = 1563. *cst.ft_to_m
+            elif 'Foster'        in ele_file: max_cons_pool_SOP = 637.  *cst.ft_to_m
+            elif 'Green_Peter'   in ele_file: max_cons_pool_SOP = 1010. *cst.ft_to_m
+            elif 'Blue_River'    in ele_file: max_cons_pool_SOP = 1350. *cst.ft_to_m
+            elif 'Cougar'        in ele_file: max_cons_pool_SOP = 1690. *cst.ft_to_m
+            elif 'Fern_Ridge'    in ele_file: max_cons_pool_SOP = 373.5 *cst.ft_to_m
+            elif 'Cottage_Grove' in ele_file: max_cons_pool_SOP =  790. *cst.ft_to_m
+            elif 'Dorena'        in ele_file: max_cons_pool_SOP =  832. *cst.ft_to_m
+            elif 'Fall_Creek'    in ele_file: max_cons_pool_SOP =  830. *cst.ft_to_m
+            elif 'Hills_Creek'   in ele_file: max_cons_pool_SOP = 1541. *cst.ft_to_m
+            else: 
+                print 'file name does not match reservoir programming for pool_indiv code'
+                print Dam_data_list[r][3] + ' seems to be missing'
+                assert False       
+            ele_full.append(np.min([np.amax(ele_data[1:,:]),max_cons_pool_SOP])) # take full pool as smaller of SOP value and max after first year of simulation
         for s in range(num_scenarios):# do for each scenario
             pop_file = data_path + 'WB_Population' + get_pop_scenario(scenarios_list[s]) + 'Run0.csv'
             pop_data.append(np.array(get_pop_index(np.array(np.genfromtxt(pop_file,delimiter=',',skip_header=1))[1:,:])))  #skip first year of data (2010)
@@ -2828,6 +2845,7 @@ for plot_num in plots_to_plot:
                     ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
                     ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
                     full_less_current= (ele_full[r]*np.ones_like(ele_data) - ele_data)/cst.ft_to_m
+                    full_less_current.clip(-1.e16,0.)
                     levels.append(nrc(full_less_current,[1,273],[88,335]))
                     if r != 0 and r < num_reservoirs:     # Detroit's values are much larger, so scale the others up by a factor of vertical_exag     
                         Wt.append(np.sum((-0.165)*scaled_visits_data*10.*full_less_current,1))  #not Detroit  # sum welfare loss for each year and append it to Wt
@@ -2867,7 +2885,7 @@ for plot_num in plots_to_plot:
         xlabel = 'Annual from 2010 to 2100'
         write_tinyfigs2(Wrt_smthd,upper, lower, figsize,
                         mind,maxd,redblue, num_yrs, facecolor = '0.6',
-                        linewidth = 1.5,bigplots=True,xlabel=xlabel,ylabel=ylabel)
+                        linewidth = 1.5,bigplots=True,xlabel=xlabel,ylabel=ylabel, xaxis=True)
         
         write_legend2(Wrt_smthd[11], upper[11], lower[11],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
