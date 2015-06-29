@@ -116,10 +116,10 @@ def get_scenarios():
             'FireSuppress':             '_FireSuppress_',
             'FullCostUrb':              '_FullCostUrb_',
             'Managed':                  '_Managed_',
-            'NoResorvoirs':             '_NoReservoirs_',
-            'NoGrow':                   '_NoGrow_',
-            'LateRefill':               '_LateRefill_',
-            'AllFallow':                '_AllFallow_'
+#            'NoReservoirs':             '_NoReservoirs_',
+#            'NoGrow':                   '_NoGrow_',
+#            'LateRefill':               '_LateRefill_',
+#            'AllFallow':                '_AllFallow_'
             }
     return scenarios
 
@@ -752,6 +752,7 @@ if recreational_reservoirs_loop:# reservoir and scenario information/data
     
     scenarios = get_scenarios()
     scenarios_list = [scenarios[key] for key in scenarios]
+    print 'scenarios = ',scenarios_list
     
     
 print 'Plots to be plotted are:', '\t', plots_to_plot
@@ -2845,7 +2846,7 @@ for plot_num in plots_to_plot:
                     ele_file = data_path + Dam_data_list[r][3] + '_Reservoir_(USACE)_Reservoir' + scenarios_list[s] + 'Run0.csv'#temporary
                     ele_data = mfx(ele_file,column=1,skip=cst.day_of_year_oct1)
                     full_less_current= (ele_full[r]*np.ones_like(ele_data) - ele_data)/cst.ft_to_m
-                    full_less_current.clip(-1.e16,0.)
+                    full_less_current = full_less_current.clip(0)  # remove negative numbers (above maximum conservation pool)
                     levels.append(nrc(full_less_current,[1,273],[88,335]))
                     if r != 0 and r < num_reservoirs:     # Detroit's values are much larger, so scale the others up by a factor of vertical_exag     
                         Wt.append(np.sum((-0.165)*scaled_visits_data*10.*full_less_current,1))  #not Detroit  # sum welfare loss for each year and append it to Wt
@@ -2862,10 +2863,11 @@ for plot_num in plots_to_plot:
         
         data_to_stack = []
         #['FullCostUrb','LowClim','HighClim','Ref','LateRefill','Managed','FireSuppress','UrbExpand']:
-        for key in [2,3,4,9,6,8,10,11]: 
+#        for key in [2,3,4,9,6,8,10,11]: 
+        for key in range(num_scenarios): 
             data_to_stack.append([movingaverage(Wrt_and_Wt_total[key][i], window) for i in range(12)])  
             # Calculate baseline-subtracted value
-            if key == 9:   # Ref case
+            if key == 3:   # Ref case
                 Wrt_smthd = [movingaverage(Wrt_and_Wt_total[key][i],window) for i in range(12)]
         
         data_to_stack = [tuple([data_to_stack[j][i] for j in range(len(data_to_stack))]) for i in range(12)]
