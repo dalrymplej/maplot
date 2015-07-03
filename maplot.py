@@ -63,7 +63,7 @@ def get_allDamLocs():
             'Blue River':               (-122.279801, 44.182290, 6),
             'Cougar':                   (-122.231298, 44.107187, 7),
             'Detroit':                  (-122.250739, 44.721682, 8),
-            'Green Peter':              (-122.548650, 44.449654, 9),
+            'Green Peter':              (-122.7, 44.449654, 9),
             'Lookout Point':            (-122.752465, 43.914625, 10),
             'Dorena':                   (-122.955039, 43.786775, 11),
             'Cottage Grove':            (-123.052858, 43.716259, 12),
@@ -94,7 +94,8 @@ def get_recreational_reservoirs():
             'Detroit':                  (-122.250739, 44.721682, 1, 'Detroit'),
             'Fern Ridge':               (-123.301178, 44.120915, 2, 'Fern_Ridge'),
             'Foster':                   (-122.641251, 44.414983, 3, 'Foster'),
-            'Green Peter':              (-122.548650, 44.449654, 4, 'Green_Peter'),
+            'Green Peter':              (-122.548650, 44.51, 4, 'Green_Peter'),
+#            'Green Peter':              (-122.548650, 44.449654, 4, 'Green_Peter'),
             'Dorena':                   (-122.955039, 43.786775, 5, 'Dorena'),
             'Fall Creek':               (-122.739280, 43.951271, 6, 'Fall_Creek'),
             'Cottage_Grove':            (-123.052858, 43.716259, 7, 'Cottage_Grove'),
@@ -117,9 +118,11 @@ def get_scenarios():
             'FullCostUrb':              '_FullCostUrb_',
             'Managed':                  '_Managed_',
 #            'NoReservoirs':             '_NoReservoirs_',
-#            'NoGrow':                   '_NoGrow_',
-#            'LateRefill':               '_LateRefill_',
-#            'AllFallow':                '_AllFallow_'
+            'NoGrow':                   '_NoGrow_',
+            'LateRefill':               '_LateRefill_',
+            'AllFallow':                '_AllFallow_',
+            'Extreme':                  '_Extreme_',
+            'HighIrrig':                '_HighIrrig_'
             }
     return scenarios
 
