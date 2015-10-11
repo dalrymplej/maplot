@@ -369,7 +369,7 @@ def get_data():
             'Marys':                    (-123.2615, 44.5564,    7,  778831948.728,-123.429468,	44.504221, 9, 5, 11),
             'North Santiam':            (-123.1432, 44.7501,    8,  1976850713.48,-122.230379,	44.715461, 11, 6, 13),
             'South Santiam':            (-123.007,  44.6855,    9,  2694079717.91,-122.522354,	44.517834, 13, 7, 15),
-            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.052358,	45.538177, 15, 8, 17),
+            'Tualatin':                 (-122.6501, 45.3377,    10, 1829685666.99,-123.0,	45.538177, 15, 8, 17),
             'Coast Fork Willamette':    (-123.0082, 44.0208,    11, 1691632167.43,-122.901411,	43.719156, 17, 9, 19),
             'Willamette':               (-122.7651, 45.6537,    12 , 29728000000., -122.7651,    45.6537, 2, 1, 1)
             }
@@ -392,7 +392,9 @@ def get_data():
             'FireSuppress':             '_FireSuppress_Run0',
             'FullCostUrb':              '_FullCostUrb_Run0',
             'Managed':                  '_Managed_Run0',
-            'Extreme':                  '_Extreme_Run0'
+            'Extreme':                  '_Extreme_Run0',
+            'HighIrrig':                '_HighIrrig_Run0',
+            'LowIrrig':                 '_LowIrrig_Run0',
             }
 
     scenarios_own = {
@@ -404,7 +406,9 @@ def get_data():
             'FireSuppress':             'Reference',
             'FullCostUrb':              'Reference',
             'Managed':                  'Reference',
-            'Extreme':                  'HighClim'
+            'Extreme':                  'HighClim',
+            'HighIrrig':                'Reference',
+            'LowIrrig':                 'Reference',
             }
     
     SimulatedHistoric = {
@@ -659,10 +663,10 @@ figsize=[(0.8,0.6) for i in range(11)]
 figsize.append((0.8,0.6))
 figsize_leg = (0.8,0.6)
 
-subbasins_loop = False 
+subbasins_loop = True 
 reservoirs_loop = False
 correlations_loop = False
-recreational_reservoirs_loop = True  #edit here
+recreational_reservoirs_loop = False  #edit here
 
 subbasin_data, scenarios, scenarios_own, SimulatedHistoric = get_data()
 file_baseline = '_Ref_'
@@ -692,10 +696,10 @@ if subbasins_loop:
 #    lats.append(43.9)
     lats.append(45.55)
 
-#    plots_to_plot = range(4)
+    plots_to_plot.extend([4])
 #    plots_to_plot.extend([9])
 #    plots_to_plot.extend([4,45,5,8,9])
-    plots_to_plot.extend([0])
+#    plots_to_plot.extend([0,4,45,5,8,9])
     
 if reservoirs_loop:
 #    plots_to_plot.extend([101,102,103])
@@ -946,7 +950,7 @@ for plot_num in plots_to_plot:
     elif plot_num == 4:
         plt.close()
         
-        window = binomial_window(15)
+        window = binomial_window(17)
         file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'    
         # Calculate Baselines
         baseline = {}
@@ -990,7 +994,7 @@ for plot_num in plots_to_plot:
                         linewidth = 1.5)
         
         ylabel = r'$\Delta \, Drought\,$ [days]'
-        xlabel = 'Red = Drier'
+        xlabel = '    Red = Drier'
         write_legend2(summer_dr_d_smthd[11], upper[11], lower[11],figsize_leg,
                       mind,maxd,redblue,num_yrs,ylabel,xlabel, facecolor='0.6',
                       linewidth=1.5)
@@ -1007,7 +1011,7 @@ for plot_num in plots_to_plot:
     elif plot_num == 45:
         plt.close()
         
-        window = binomial_window(15)
+        window = binomial_window(17)
         file_nm = data_path + 'ET_by_Subbasin'+file_baseline+'Run0.csv'    
         file_ex = data_path + 'ET_by_Elevation_(mm)'+file_baseline+'Run0.csv' # Need average for whole WB, in different file
         # Calculate Baseline
@@ -1078,7 +1082,7 @@ for plot_num in plots_to_plot:
 ############  Winter Temperature w mini figs ############    
     elif plot_num == 5:
         plt.close()
-        window = binomial_window(15)
+        window = binomial_window(17)
         file_nm = data_path + 'Climate_(Subbasin)'+file_baseline+'Run0.csv'
         file_nmWB = data_path + 'Climate'+file_baseline+'Run0.csv'
        
@@ -1380,7 +1384,7 @@ for plot_num in plots_to_plot:
 ############  Center of Timing w mini figs ############    
     elif plot_num == 8:
         plt.close()
-        window = binomial_window(15)
+        window = binomial_window(17)
         file_nm = data_path + 'Discharge_(Subbasins)'+file_baseline+'Run0.csv'
                
         # Calculate Baseline
@@ -1436,7 +1440,7 @@ for plot_num in plots_to_plot:
     elif plot_num == 9:
         plt.close()
 
-        window = binomial_window(15)
+        window = binomial_window(17)
         figsize9=[(figsize[i][0],figsize[i][1]*1.5) for i in range(12)]
         figsize_leg9=(figsize_leg[0],figsize_leg[1]*1.5) 
         file_nm = data_path + 'Snow_(Subbasin)'+file_baseline+'Run0.csv'
@@ -1498,7 +1502,7 @@ for plot_num in plots_to_plot:
 ############  BiOp & Env Flows w mini figs ############    
     elif plot_num == 101:
         plt.close()
-        window = binomial_window(15)
+        window = binomial_window(17)
         num_locs = len(res_data_list)
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
@@ -1568,7 +1572,7 @@ for plot_num in plots_to_plot:
 ############  BiOp & Env Flows w mini figs SUMMER ONLY ############    
     elif plot_num == 102:
         plt.close()
-        window = binomial_window(15)
+        window = binomial_window(17)
         num_locs = len(res_data_list)
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
@@ -1639,7 +1643,7 @@ for plot_num in plots_to_plot:
 ############  BiOp & Env Flows w mini figs NOT SUMMER  ############    
     elif plot_num == 103:
         plt.close()
-        window = binomial_window(15)
+        window = binomial_window(17)
         num_locs = len(res_data_list)
         figsize=[(1.1,0.8) for i in range(num_locs)]
         figsize.append((1.1,0.8))
@@ -2688,7 +2692,7 @@ for plot_num in plots_to_plot:
     elif plot_num == 220:
         firstloop = True
         avg_range = 7
-        for doyloop in range(1,370,7):   
+        for doyloop in range(1,360,7):   
             mth_name = 'DOY '+ str(doyloop)
             if firstloop:
                 gage_list = gg.get_gage_info(local_path= 'C:\\code\\Willamette Basin gauge data\\',index_col=[0,1,2,3,4])
